@@ -274,7 +274,7 @@ public sealed class Game
 
     public void d()
     {
-        if (var_boolean_l) return;
+        if (var_boolean_l || var_a_f == null) return;
         var gr = GMIDlet.var_javax_microedition_lcdui_Graphics_a;
         if (gr == null) return;
 
@@ -493,7 +493,7 @@ public sealed class Game
     private void a(int n, int n2, int n3, int n4, int n5, int n6, int n7)
     {
         var gr = GMIDlet.var_javax_microedition_lcdui_Graphics_a;
-        if (gr == null) return;
+        if (gr == null || n5 <= 0) return;
         int n8 = n3;
         int n9 = n8 * n4 / n5;
         if (n9 < 1) n9 = 1;
