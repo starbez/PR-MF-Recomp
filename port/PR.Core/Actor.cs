@@ -201,7 +201,7 @@ public sealed class Actor
                     n3 += 2;
                     byte by = (byte)byArray[n3++];
                     byte by2 = (byte)byArray[n3++];
-                    int n7 = (short)((short)(by << 8) | by2);
+                    int n7 = (short)(((by & 0xFF) << 8) | (by2 & 0xFF));
                     int n8 = var_byte_arr_b![(n7 * 5) + 4];
                     int n9 = var_short_arr_c[n8] & 0x7F;
                     if (n < 0)
@@ -210,7 +210,7 @@ public sealed class Actor
                         n5 = 0;
                         for (n4 = 0; n4 < n9; ++n4)
                         {
-                            n5 |= (short)(1 << (8 + n4));
+                            n5 |= 1 << (8 + n4);
                         }
                     }
                     else if (n9 - 1 < n)
@@ -287,7 +287,7 @@ public sealed class Actor
             int n8 = byArray[n6++];
             byte by2 = (byte)byArray[n6++];
             byte by3 = (byte)byArray[n6++];
-            int n9 = (short)((short)(by2 << 8) | by3);
+            int n9 = (short)(((by2 & 0xFF) << 8) | (by3 & 0xFF));
             n9 *= 5;
 
             int n10 = var_byte_arr_b![n9++] & 0xFF;

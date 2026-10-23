@@ -165,6 +165,37 @@
 - **Menu Option:** Added `SCREEN: < WIDESCREEN / ORIGINAL >`, default Widescreen.
 - **Validation:** When `EngineTweaks.Widescreen = false` in tests, 240-width branch runs bit-identically (`ALL VALIDATIONS PASSED`).
 
+## Task 4: Modern Settings, Rebinding & Pause Layer
+
+### 1. Implementation
+- **Modern Settings Layer:**
+  - Implemented 11 configurable options in `MenuSystem.cs:RenderOptions()`:
+    1. Sound on/off
+    2. Volume slider (0% to 100%)
+    3. Language (DE, EN, FR, IT) with live reloading via `App.LoadLanguage()`
+    4. Frame Rate: Smooth (60) vs Original (14)
+    5. Screen Mode: Widescreen (16:9) vs Original (4:3)
+    6. Scaling: Integer vs Fit
+    7. Window Scale: 1X to 6X
+    8. Fullscreen: Yes / No
+    9. Controls: opens Key & Gamepad Rebinding sub-menu
+    10. Reset to Defaults: single-action restoration of all settings and bindings
+    11. Back: returns to Pause menu (if paused) or Main Menu
+- **Input Rebinding Screen (`GameState.Rebind`):**
+  - Full rebinding support for all 8 actions (Up, Down, Left, Right, Attack/OK, Special/Magic, Left Softkey, Right Soft/Pause).
+  - Displays currently mapped keyboard key and gamepad button.
+  - Interactive modal prompt captures next key press or gamepad button press, persists directly to `%APPDATA%/PowerRangers/bindings.json`.
+- **Enhanced Pause Menu:**
+  - Triggered in-game with Escape, Right Softkey, or Gamepad Start.
+  - Presents Resume, Settings, Rebind Controls, and Quit to Title options over the frozen game frame.
+- **Mouse & Gamepad Navigation:**
+  - Full mouse navigation with virtual coordinate mapping (`GameView.ScreenToVirtual()`) unaffected by window resizing or aspect ratio.
+  - Full Gamepad navigation with D-Pad, Left Stick, A (confirm), B (cancel/back), and Start.
+- **Visuals:**
+  - Styled using the original Living Mobile proportional bitmap fonts (`GMIDlet.a()`), gold border styling, and dark crimson backgrounds.
+- **Validation:**
+  - Tweak logic isolated from core engine; all 608 simulation ticks and 7 reference frames continue to pass 100% bit-identical.
+
 
 
 

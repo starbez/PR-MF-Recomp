@@ -14,6 +14,7 @@ public sealed class SaveData
     public bool Fullscreen { get; set; } = false;
     public bool Smooth60Fps { get; set; } = true; // Default Smooth (60)
     public bool Widescreen { get; set; } = true;  // Default Widescreen
+    public bool FitScaling { get; set; } = false; // Default Integer scaling
     public int SelectedCharacter { get; set; } = 0; // 0..4
     public int HighestUnlockedLevel { get; set; } = 1;
 
@@ -87,6 +88,19 @@ public sealed class SaveManager
         {
             Console.WriteLine($"[SaveManager] Failed to write save file: {ex.Message}");
         }
+    }
+
+    public void ResetToDefaults()
+    {
+        Data.LanguageIndex = 1;
+        Data.SoundEnabled = true;
+        Data.Volume = 800;
+        Data.Scale = 3;
+        Data.Fullscreen = false;
+        Data.Smooth60Fps = true;
+        Data.Widescreen = true;
+        Data.FitScaling = false;
+        Save();
     }
 
     public bool CheckHighScore(int score, bool survival, out int rank)

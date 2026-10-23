@@ -17,11 +17,28 @@ public sealed class GameView : IDisposable
     private int _scale;
     private bool _fullscreen;
     private int _activeCanvasWidth;
+    private Rectangle _destRect;
 
+    public bool FitScaling { get; set; } = false;
     public int Scale => _scale;
     public bool IsFullscreen => _fullscreen;
     public int CurrentWidth => EngineTweaks.RenderWidth;
     public int CurrentHeight => EngineTweaks.RenderHeight;
+
+    public Vector2 ScreenToVirtual(Vector2 screenPos)
+    {
+        if (screenPos.X < _destRect.X || screenPos.X >= _destRect.X + _destRect.Width ||
+            screenPos.Y < _destRect.Y || screenPos.Y >= _destRect.Y + _destRect.Height)
+        {
+            return new Vector2(-1, -1);
+        }
+
+        if (_destRect.Width <= 0 || _destRect.Height <= 0) return new Vector2(-1, -1);
+
+        float virtX = (screenPos.X - _destRect.X) * _activeCanvasWidth / _destRect.Width;
+        float virtY = (screenPos.Y - _destRect.Y) * BaseHeight / _destRect.Height;
+        return new Vector2(virtX, virtY);
+    }
 
     public unsafe GameView(int scale, bool fullscreen)
     {
@@ -99,23 +116,35 @@ public sealed class GameView : IDisposable
         int curW = _activeCanvasWidth;
         int curH = BaseHeight;
 
-        // Calculate maximum integer scale that fits the window
-        int scaleX = winWidth / curW;
-        int scaleY = winHeight / curH;
-        int intScale = Math.Max(1, Math.Min(scaleX, scaleY));
+        int drawW, drawH;
+        if (FitScaling)
+        {
+            float scaleX = (float)winWidth / curW;
+            float scaleY = (float)winHeight / curH;
+            float fitScale = Math.Min(scaleX, scaleY);
+            drawW = Math.Max(1, (int)(curW * fitScale));
+            drawH = Math.Max(1, (int)(curH * fitScale));
+        }
+        else
+        {
+            // Calculate maximum integer scale that fits the window
+            int scaleX = winWidth / curW;
+            int scaleY = winHeight / curH;
+            int intScale = Math.Max(1, Math.Min(scaleX, scaleY));
+            drawW = curW * intScale;
+            drawH = curH * intScale;
+        }
 
-        int drawW = curW * intScale;
-        int drawH = curH * intScale;
         int posX = (winWidth - drawW) / 2;
         int posY = (winHeight - drawH) / 2;
+        _destRect = new Rectangle(posX, posY, drawW, drawH);
 
         Raylib.BeginDrawing();
         Raylib.ClearBackground(Color.Black);
 
         // Draw game screen texture scaled with point filtering
         var srcRec = new Rectangle(0, 0, curW, curH);
-        var dstRec = new Rectangle(posX, posY, drawW, drawH);
-        Raylib.DrawTexturePro(_screenTexture, srcRec, dstRec, Vector2.Zero, 0.0f, Color.White);
+        Raylib.DrawTexturePro(_screenTexture, srcRec, _destRect, Vector2.Zero, 0.0f, Color.White);
 
         Raylib.EndDrawing();
     }

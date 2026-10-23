@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - Upgrades & Fixes: Task 4 (Modern Settings, Rebinding & Pause Layer)
+### Added
+- Modern Settings & Options Layer:
+  - Sound on/off toggle and master volume slider (0% to 100% in 10% steps).
+  - Dynamic in-game language selection (DE, EN, FR, IT) reloading localized text strings in real time via `App.LoadLanguage()`.
+  - Frame rate mode toggle: `SMOOTH (60)` vs `ORIGINAL (14)`.
+  - Screen mode toggle: `WIDESCREEN (16:9)` vs `ORIGINAL (4:3)`.
+  - Display scaling mode toggle: `INTEGER` scaling vs aspect-preserved `FIT` scaling.
+  - Window scale selector (1X to 6X) and Fullscreen toggle (`YES` / `NO`).
+  - Key & Gamepad Rebinding sub-menu: interactive visual remap for all 8 game actions with modal key/button capture.
+  - "Reset to Defaults" action restoring all audio, display, language, and input bindings in one click.
+- Enhanced Pause Menu (Esc / Soft Right):
+  - In-game pause overlay with `RESUME`, `SETTINGS`, `REBIND CONTROLS`, and `QUIT TO TITLE`.
+  - Seamless navigation between pause and settings without losing game progress.
+- Comprehensive Mouse & Gamepad Navigation:
+  - Dynamic coordinate translation (`GameView.ScreenToVirtual()`) enabling point-and-click and hover selection at any window size and aspect ratio.
+  - Full Gamepad navigation support with D-Pad, Left Stick, A (select), B (cancel/back), and Start (pause).
+- Art & Font Preservation:
+  - All modern menu screens and overlays rendered using original proportional bitmap fonts (`GMIDlet.a()`), gold border frames, and Living Mobile crimson UI style.
+
 ## [1.3.0] - Upgrades & Fixes: Task 3 (Widescreen 16:9 Extension)
 ### Added
 - Extended internal rendering resolution to 16:9 aspect ratio (568x320) via `EngineTweaks.Widescreen`:

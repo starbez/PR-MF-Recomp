@@ -267,6 +267,21 @@ public sealed class App
         }
     }
 
+    public void LoadLanguage(int langIndex)
+    {
+        var_byte_d = (byte)Math.Clamp(langIndex, 0, var_java_lang_String_arr_b.Length - 1);
+        using var textStream = ResourceProvider.OpenResource("text__" + var_java_lang_String_arr_b[var_byte_d] + ".txt");
+        if (textStream != null)
+        {
+            using var textDis = new DataReader(textStream);
+            var_java_lang_String_arr_a = ReadStringArray(textDis);
+            var_java_lang_String_arr_arr_a = new string[3][];
+            var_java_lang_String_arr_arr_a[0] = ReadStringArray(textDis);
+            var_java_lang_String_arr_arr_a[1] = ReadStringArray(textDis);
+            var_java_lang_String_arr_arr_a[2] = ReadStringArray(textDis);
+        }
+    }
+
     public void a(int step, int totalSteps)
     {
     }

@@ -92,7 +92,7 @@ public static class GMIDlet
             byte[] byArray2 = new byte[s2];
             for (int i = 0; i < n3; ++i)
             {
-                s = (short)(s | (1 << (8 + i)));
+                s = (short)((ushort)s | (ushort)(1 << (8 + i)));
                 Array.Copy(byArray, 0, byArray2, 0, byArray.Length);
                 if (i > 0)
                 {

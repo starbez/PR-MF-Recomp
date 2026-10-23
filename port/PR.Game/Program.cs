@@ -88,6 +88,7 @@ public static class Program
             PR.Core.EngineTweaks.Widescreen = saveManager.Data.Widescreen;
 
             using var view = new GameView(saveManager.Data.Scale, saveManager.Data.Fullscreen);
+            view.FitScaling = saveManager.Data.FitScaling;
             var inputRouter = new InputRouter();
 
             // 5. Setup Software Screen
@@ -100,6 +101,8 @@ public static class Program
                 app,
                 saveManager,
                 midiPlayer,
+                view,
+                inputRouter,
                 onScaleChange: newScale => view.SetScale(newScale),
                 onFullscreenToggle: () => view.ToggleFullscreen(),
                 onWidescreenToggle: () =>
@@ -135,6 +138,14 @@ public static class Program
                 {
                     menuSystem.HandleDebugF3();
                 }
+
+                // Check Rebinding Input if active
+                menuSystem.CheckRebindingInput();
+
+                // Process Mouse Input
+                var virtMouse = view.ScreenToVirtual(Raylib.GetMousePosition());
+                bool leftClick = Raylib.IsMouseButtonPressed(MouseButton.Left);
+                menuSystem.ProcessMouse(virtMouse, leftClick);
 
                 // Process Input
                 inputRouter.Update(

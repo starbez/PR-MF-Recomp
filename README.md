@@ -20,7 +20,7 @@ Based on decompilation, bytecode analysis, and literal logic translation validat
 | Task 1: Fix missing sound | 100% | DIAGNOSED & FIXED: MCI repeat parameter bug resolved, in-memory loader, verified 0 audio diffs with harness. |
 | Task 2: 60 FPS smooth | 100% | Original 70ms logic preserved, sub-frame interpolation for camera/actors, snap on teleports, switchable in menu. |
 | Task 3: Widescreen | 100% | 16:9 widescreen extended view, parallax background edge tiling, logic activation rectangle preserved, centered HUD & menus, switchable in menu. |
-| Task 4: Better menus | Queued | Modern settings layer, mouse/gamepad nav, Esc pause menu with settings. |
+| Task 4: Better menus | 100% | Modern settings layer (volume, sound on/off, language, FPS, widescreen, integer vs fit, fullscreen, rebinding, reset to defaults), mouse/gamepad navigation, Esc pause menu with settings & quit. |
 
 ---
 

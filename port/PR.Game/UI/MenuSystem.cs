@@ -1,8 +1,11 @@
 using System;
 using System.IO;
+using System.Numerics;
+using Raylib_cs;
 using PR.Core;
 using PR.Core.Graphics;
 using PR.Game.Audio;
+using PR.Game.Input;
 using PR.Game.Saves;
 using CoreGame = PR.Core.Game;
 
@@ -16,6 +19,7 @@ public enum GameState
     LevelSelect,
     HighScores,
     Options,
+    Rebind,
     Help,
     InGame,
     Paused,
@@ -29,8 +33,11 @@ public sealed class MenuSystem
     private readonly App _app;
     private readonly SaveManager _saveManager;
     private readonly MidiPlayer _audio;
+    private readonly GameView _view;
+    private readonly InputRouter _inputRouter;
     private readonly Action<int> _onScaleChange;
     private readonly Action _onFullscreenToggle;
+    private readonly Action _onWidescreenToggle;
 
     public GameState State { get; private set; } = GameState.Title;
     public CoreGame? ActiveGame { get; private set; }
@@ -44,17 +51,27 @@ public sealed class MenuSystem
     private char[] _nameInput = new char[4] { 'A', 'A', 'A', ' ' };
     private int _nameCursor = 0;
     private int _animTick = 0;
+    private bool _returnToPause = false;
+    private int _rebindingAction = -1;
 
     private static readonly string[] RangerNames = { "NICK (RED)", "CHIP (YELLOW)", "MADISON (BLUE)", "VIDA (PINK)", "XANDER (GREEN)" };
     private static readonly string[] RangerElements = { "FIRE / BALANCED", "LIGHTNING / SPEED", "WATER / MAGIC", "WIND / AGILITY", "EARTH / STRENGTH" };
 
-    private readonly Action _onWidescreenToggle;
-
-    public MenuSystem(App app, SaveManager saveManager, MidiPlayer audio, Action<int> onScaleChange, Action onFullscreenToggle, Action onWidescreenToggle)
+    public MenuSystem(
+        App app,
+        SaveManager saveManager,
+        MidiPlayer audio,
+        GameView view,
+        InputRouter inputRouter,
+        Action<int> onScaleChange,
+        Action onFullscreenToggle,
+        Action onWidescreenToggle)
     {
         _app = app;
         _saveManager = saveManager;
         _audio = audio;
+        _view = view;
+        _inputRouter = inputRouter;
         _onScaleChange = onScaleChange;
         _onFullscreenToggle = onFullscreenToggle;
         _onWidescreenToggle = onWidescreenToggle;
@@ -64,6 +81,7 @@ public sealed class MenuSystem
         _audio.Volume = _saveManager.Data.Volume;
         PR.Core.EngineTweaks.Smooth60Fps = _saveManager.Data.Smooth60Fps;
         PR.Core.EngineTweaks.Widescreen = _saveManager.Data.Widescreen;
+        _view.FitScaling = _saveManager.Data.FitScaling;
 
         PlayMenuMusic();
     }
@@ -164,6 +182,10 @@ public sealed class MenuSystem
 
             case GameState.Options:
                 HandleOptionsInput(keyCode);
+                break;
+
+            case GameState.Rebind:
+                HandleRebindInput(keyCode);
                 break;
 
             case GameState.Help:
@@ -308,7 +330,7 @@ public sealed class MenuSystem
 
     private void HandleOptionsInput(int key)
     {
-        const int OptionsCount = 8;
+        const int OptionsCount = 11;
         if (key == -1) // UP
         {
             _subIndex = (_subIndex - 1 + OptionsCount) % OptionsCount;
@@ -317,39 +339,38 @@ public sealed class MenuSystem
         {
             _subIndex = (_subIndex + 1) % OptionsCount;
         }
-        else if (key == -3 || key == -4 || key == -5) // LEFT/RIGHT/FIRE
+        else if (key == -3 || key == -4 || key == -5 || key == -6) // LEFT/RIGHT/FIRE
         {
             int dir = key == -3 ? -1 : 1;
             switch (_subIndex)
             {
-                case 0: // Language (0=de, 1=en, 2=fr, 3=it)
-                    int nextLang = (_saveManager.Data.LanguageIndex + dir + 4) % 4;
-                    _saveManager.Data.LanguageIndex = nextLang;
-                    App.var_byte_d = (byte)nextLang;
-                    _app.m(); // Reload language text
-                    _saveManager.Save();
-                    break;
-
-                case 1: // Sound Toggle
+                case 0: // Sound Toggle
                     _saveManager.Data.SoundEnabled = !_saveManager.Data.SoundEnabled;
                     _audio.IsMuted = !_saveManager.Data.SoundEnabled;
                     PR.Core.Audio.SoundEngine.Enabled = _saveManager.Data.SoundEnabled;
-                    if (Raylib_cs.Raylib.IsAudioDeviceReady())
+                    if (Raylib.IsAudioDeviceReady())
                     {
-                        Raylib_cs.Raylib.SetMasterVolume(_saveManager.Data.SoundEnabled ? _saveManager.Data.Volume / 1000f : 0f);
+                        Raylib.SetMasterVolume(_saveManager.Data.SoundEnabled ? _saveManager.Data.Volume / 1000f : 0f);
                     }
                     if (_saveManager.Data.SoundEnabled) PlayMenuMusic();
                     else _audio.Stop();
                     _saveManager.Save();
                     break;
 
-                case 2: // Volume
+                case 1: // Volume
                     _saveManager.Data.Volume = Math.Clamp(_saveManager.Data.Volume + dir * 100, 0, 1000);
                     _audio.Volume = _saveManager.Data.Volume;
-                    if (Raylib_cs.Raylib.IsAudioDeviceReady() && _saveManager.Data.SoundEnabled)
+                    if (Raylib.IsAudioDeviceReady() && _saveManager.Data.SoundEnabled)
                     {
-                        Raylib_cs.Raylib.SetMasterVolume(_saveManager.Data.Volume / 1000f);
+                        Raylib.SetMasterVolume(_saveManager.Data.Volume / 1000f);
                     }
+                    _saveManager.Save();
+                    break;
+
+                case 2: // Language (0=de, 1=en, 2=fr, 3=it)
+                    int nextLang = (_saveManager.Data.LanguageIndex + dir + 4) % 4;
+                    _saveManager.Data.LanguageIndex = nextLang;
+                    _app.LoadLanguage(nextLang);
                     _saveManager.Save();
                     break;
 
@@ -366,36 +387,144 @@ public sealed class MenuSystem
                     _saveManager.Save();
                     break;
 
-                case 5: // Window Scale
-                    int nextScale = Math.Clamp(_saveManager.Data.Scale + dir, 1, 5);
+                case 5: // Scaling (Integer vs Fit)
+                    _view.FitScaling = !_view.FitScaling;
+                    _saveManager.Data.FitScaling = _view.FitScaling;
+                    _saveManager.Save();
+                    break;
+
+                case 6: // Window Scale
+                    int nextScale = Math.Clamp(_saveManager.Data.Scale + dir, 1, 6);
                     _saveManager.Data.Scale = nextScale;
                     _onScaleChange(nextScale);
                     _saveManager.Save();
                     break;
 
-                case 6: // Fullscreen Toggle
+                case 7: // Fullscreen Toggle
                     _onFullscreenToggle();
                     _saveManager.Data.Fullscreen = !_saveManager.Data.Fullscreen;
                     _saveManager.Save();
                     break;
 
-                case 7: // Test Audio
-                    _audioTestState = (_audioTestState + dir + 4) % 4;
-                    if (_audioTestState == 1) PR.Core.Audio.SoundEngine.PlaySoundDirect(1, true);
-                    else if (_audioTestState == 2) PR.Core.Audio.SoundEngine.PlaySoundDirect(2, true);
-                    else PR.Core.Audio.SoundEngine.Stop();
+                case 8: // Controls / Rebind
+                    State = GameState.Rebind;
+                    _subIndex = 0;
+                    break;
+
+                case 9: // Reset to Defaults
+                    ResetAllToDefaults();
+                    break;
+
+                case 10: // Back
+                    State = _returnToPause ? GameState.Paused : GameState.MainMenu;
                     break;
             }
         }
-        else if (key == -7) // BACK
+        else if (key == -7) // BACK (ESC)
         {
-            State = GameState.MainMenu;
+            State = _returnToPause ? GameState.Paused : GameState.MainMenu;
         }
+    }
+
+    private void HandleRebindInput(int key)
+    {
+        if (_rebindingAction >= 0) return;
+
+        const int RebindCount = 10;
+        if (key == -1) // UP
+        {
+            _subIndex = (_subIndex - 1 + RebindCount) % RebindCount;
+        }
+        else if (key == -2) // DOWN
+        {
+            _subIndex = (_subIndex + 1) % RebindCount;
+        }
+        else if (key == -5 || key == -6) // FIRE / ENTER
+        {
+            if (_subIndex < 8)
+            {
+                _rebindingAction = _subIndex;
+            }
+            else if (_subIndex == 8) // Reset controls
+            {
+                _inputRouter.ResetToDefaults();
+            }
+            else if (_subIndex == 9) // Back
+            {
+                State = _returnToPause ? GameState.Paused : GameState.Options;
+            }
+        }
+        else if (key == -7) // BACK (ESC)
+        {
+            State = _returnToPause ? GameState.Paused : GameState.Options;
+        }
+    }
+
+    public void CheckRebindingInput()
+    {
+        if (_rebindingAction < 0) return;
+
+        // Cancel on Escape
+        if (Raylib.IsKeyPressed(KeyboardKey.Escape))
+        {
+            _rebindingAction = -1;
+            return;
+        }
+
+        // Check Keyboard
+        int pressed = (int)Raylib.GetKeyPressed();
+        if (pressed > 0)
+        {
+            _inputRouter.Bindings.SetKeyboardBinding(_rebindingAction, (KeyboardKey)pressed);
+            _inputRouter.SaveBindings();
+            _rebindingAction = -1;
+            return;
+        }
+
+        // Check Gamepad
+        if (Raylib.IsGamepadAvailable(0))
+        {
+            foreach (GamepadButton btn in Enum.GetValues<GamepadButton>())
+            {
+                if (Raylib.IsGamepadButtonPressed(0, btn))
+                {
+                    _inputRouter.Bindings.SetGamepadBinding(_rebindingAction, btn);
+                    _inputRouter.SaveBindings();
+                    _rebindingAction = -1;
+                    return;
+                }
+            }
+        }
+    }
+
+    public void ResetAllToDefaults()
+    {
+        _saveManager.ResetToDefaults();
+        _inputRouter.ResetToDefaults();
+        _audio.IsMuted = false;
+        _audio.Volume = 800;
+        if (Raylib.IsAudioDeviceReady())
+        {
+            Raylib.SetMasterVolume(0.8f);
+        }
+        PR.Core.Audio.SoundEngine.Enabled = true;
+        _app.LoadLanguage(1);
+        PR.Core.EngineTweaks.Smooth60Fps = true;
+        PR.Core.EngineTweaks.Widescreen = true;
+        _view.FitScaling = false;
+        _view.SetScale(3);
+        if (_view.IsFullscreen)
+        {
+            _onFullscreenToggle();
+        }
+        _onWidescreenToggle();
+        _saveManager.Save();
+        PlayMenuMusic();
     }
 
     private void HandlePauseInput(int key)
     {
-        const int PauseCount = 3;
+        const int PauseCount = 4;
         if (key == -1) _menuIndex = (_menuIndex - 1 + PauseCount) % PauseCount;
         else if (key == -2) _menuIndex = (_menuIndex + 1) % PauseCount;
         else if (key == -5 || key == -6)
@@ -406,10 +535,17 @@ public sealed class MenuSystem
                     State = GameState.InGame;
                     if (_saveManager.Data.SoundEnabled) PlayGameMusic();
                     break;
-                case 1: // Restart
-                    StartGame(CoreGame.G, CoreGame.F, CoreGame.var_boolean_e);
+                case 1: // Settings
+                    _returnToPause = true;
+                    State = GameState.Options;
+                    _subIndex = 0;
                     break;
-                case 2: // Exit to Menu
+                case 2: // Rebind Controls
+                    _returnToPause = true;
+                    State = GameState.Rebind;
+                    _subIndex = 0;
+                    break;
+                case 3: // Quit to Title
                     State = GameState.MainMenu;
                     ActiveGame = null;
                     PlayMenuMusic();
@@ -525,6 +661,9 @@ public sealed class MenuSystem
                 break;
             case GameState.Options:
                 RenderOptions(gr);
+                break;
+            case GameState.Rebind:
+                RenderRebind(gr);
                 break;
             case GameState.Help:
                 RenderHelp(gr);
@@ -677,49 +816,94 @@ public sealed class MenuSystem
 
     private void RenderOptions(Graphics gr)
     {
-        GMIDlet.a(1, "OPTIONS", 120, 6, 17);
+        GMIDlet.a(1, "SETTINGS", 120, 6, 17);
 
         string[] langNames = { "DEUTSCH", "ENGLISH", "FRANCAIS", "ITALIANO" };
         string curLang = langNames[Math.Clamp(_saveManager.Data.LanguageIndex, 0, 3)];
 
-        string testAudioLabel = _audioTestState switch
-        {
-            1 => "PLAY SOUND 1",
-            2 => "PLAY SOUND 2",
-            _ => "IDLE / STOP"
-        };
-
         string[] items = {
-            $"LANGUAGE: < {curLang} >",
             $"SOUND: < {(_saveManager.Data.SoundEnabled ? "ON" : "OFF")} >",
             $"VOLUME: < {_saveManager.Data.Volume / 10}% >",
+            $"LANGUAGE: < {curLang} >",
             $"FRAME RATE: < {(_saveManager.Data.Smooth60Fps ? "SMOOTH (60)" : "ORIGINAL (14)")} >",
             $"SCREEN: < {(_saveManager.Data.Widescreen ? "WIDESCREEN" : "ORIGINAL")} >",
-            $"SCALE: < {_saveManager.Data.Scale}X >",
+            $"SCALING: < {(_view.FitScaling ? "FIT" : "INTEGER")} >",
+            $"WINDOW SCALE: < {_saveManager.Data.Scale}X >",
             $"FULLSCREEN: < {(_saveManager.Data.Fullscreen ? "YES" : "NO")} >",
-            $"TEST AUDIO: < {testAudioLabel} >"
+            "CONTROLS: [ REBIND ]",
+            "RESET TO DEFAULTS",
+            "BACK"
         };
 
-        int startY = 32;
+        int startY = 28;
         for (int i = 0; i < items.Length; i++)
         {
             bool sel = i == _subIndex;
             if (sel)
             {
                 gr.SetColor(0x401010);
-                gr.FillRect(10, startY + i * 31 - 3, 220, 24);
+                gr.FillRect(10, startY + i * 24 - 2, 220, 20);
                 gr.SetColor(0xFFD700);
-                gr.DrawRect(10, startY + i * 31 - 3, 219, 23);
-                GMIDlet.a(1, items[i], 120, startY + i * 31, 17);
+                gr.DrawRect(10, startY + i * 24 - 2, 219, 19);
+                GMIDlet.a(1, items[i], 120, startY + i * 24, 17);
             }
             else
             {
-                GMIDlet.a(0, items[i], 120, startY + i * 31, 17);
+                GMIDlet.a(0, items[i], 120, startY + i * 24, 17);
             }
         }
 
         GMIDlet.a(0, "CHANGE: LEFT/RIGHT", 6, 304, 20);
         GMIDlet.a(0, "BACK: ESC", 234, 304, 24);
+    }
+
+    private void RenderRebind(Graphics gr)
+    {
+        GMIDlet.a(1, "CONTROLS & REBINDING", 120, 6, 17);
+
+        string[] items = new string[10];
+        for (int i = 0; i < 8; i++)
+        {
+            items[i] = $"{_inputRouter.Bindings.GetActionName(i)}: {_inputRouter.Bindings.GetBindingDisplay(i)}";
+        }
+        items[8] = "RESET TO DEFAULTS";
+        items[9] = "BACK";
+
+        int startY = 28;
+        for (int i = 0; i < items.Length; i++)
+        {
+            bool sel = i == _subIndex;
+            if (sel)
+            {
+                gr.SetColor(0x401010);
+                gr.FillRect(10, startY + i * 24 - 2, 220, 20);
+                gr.SetColor(0xFFD700);
+                gr.DrawRect(10, startY + i * 24 - 2, 219, 19);
+                GMIDlet.a(1, items[i], 120, startY + i * 24, 17);
+            }
+            else
+            {
+                GMIDlet.a(0, items[i], 120, startY + i * 24, 17);
+            }
+        }
+
+        if (_rebindingAction >= 0)
+        {
+            // Draw modal overlay
+            gr.SetColor(unchecked((int)0xEE000000));
+            gr.FillRect(15, 100, 210, 80);
+            gr.SetColor(0xFFD700);
+            gr.DrawRect(15, 100, 209, 79);
+
+            GMIDlet.a(1, $"REBIND: {_inputRouter.Bindings.GetActionName(_rebindingAction)}", 120, 110, 17);
+            GMIDlet.a(0, "PRESS ANY KEY OR BUTTON...", 120, 135, 17);
+            GMIDlet.a(0, "ESC TO CANCEL", 120, 155, 17);
+        }
+        else
+        {
+            GMIDlet.a(0, "SELECT: ENTER / CLICK", 6, 304, 20);
+            GMIDlet.a(0, "BACK: ESC", 234, 304, 24);
+        }
     }
 
     private static void RenderHelp(Graphics gr)
@@ -751,23 +935,180 @@ public sealed class MenuSystem
     private void RenderPauseOverlay(Graphics gr)
     {
         gr.SetColor(unchecked((int)0xCC000000));
-        gr.FillRect(20, 60, 200, 180);
+        gr.FillRect(15, 60, 210, 180);
         gr.SetColor(0xFFD700);
-        gr.DrawRect(20, 60, 199, 179);
+        gr.DrawRect(15, 60, 209, 179);
 
-        GMIDlet.a(1, "PAUSED", 120, 80, 17);
+        GMIDlet.a(1, "PAUSED", 120, 75, 17);
 
-        string[] items = { "RESUME", "RESTART LEVEL", "EXIT TO MENU" };
+        string[] items = { "RESUME", "SETTINGS", "REBIND CONTROLS", "QUIT TO TITLE" };
         for (int i = 0; i < items.Length; i++)
         {
             if (i == _menuIndex)
             {
-                GMIDlet.a(1, "> " + items[i] + " <", 120, 130 + i * 30, 17);
+                gr.SetColor(0x401010);
+                gr.FillRect(25, 105 + i * 32 - 3, 190, 24);
+                gr.SetColor(0xFFD700);
+                gr.DrawRect(25, 105 + i * 32 - 3, 189, 23);
+                GMIDlet.a(1, "> " + items[i] + " <", 120, 105 + i * 32, 17);
             }
             else
             {
-                GMIDlet.a(0, items[i], 120, 130 + i * 30, 17);
+                GMIDlet.a(0, items[i], 120, 105 + i * 32, 17);
             }
+        }
+    }
+
+    public void ProcessMouse(Vector2 mouseVirtPos, bool leftClick)
+    {
+        if (mouseVirtPos.X < 0 || mouseVirtPos.Y < 0) return;
+
+        int screenW = PR.Core.EngineTweaks.RenderWidth;
+        int centerOffset = PR.Core.EngineTweaks.Widescreen ? (screenW - 240) / 2 : 0;
+        float localX = mouseVirtPos.X - centerOffset;
+        float localY = mouseVirtPos.Y;
+
+        switch (State)
+        {
+            case GameState.Title:
+                if (leftClick)
+                {
+                    State = GameState.MainMenu;
+                    _menuIndex = 0;
+                }
+                break;
+
+            case GameState.MainMenu:
+                if (localX >= 20 && localX <= 220)
+                {
+                    int startY = 60;
+                    int itemH = 35;
+                    if (localY >= startY && localY < startY + 6 * itemH)
+                    {
+                        int idx = (int)((localY - startY) / itemH);
+                        if (idx >= 0 && idx < 6)
+                        {
+                            _menuIndex = idx;
+                            if (leftClick) HandleMainMenuInput(-5);
+                        }
+                    }
+                }
+                break;
+
+            case GameState.CharacterSelect:
+                if (leftClick)
+                {
+                    if (localX < 60) HandleCharacterSelectInput(-3);
+                    else if (localX > 180) HandleCharacterSelectInput(-4);
+                    else if (localY >= 280) HandleCharacterSelectInput(-5);
+                }
+                break;
+
+            case GameState.LevelSelect:
+                if (leftClick)
+                {
+                    if (localX < 60) HandleLevelSelectInput(-3);
+                    else if (localX > 180) HandleLevelSelectInput(-4);
+                    else if (localY >= 280) HandleLevelSelectInput(-5);
+                }
+                break;
+
+            case GameState.Options:
+                if (localX >= 10 && localX <= 230)
+                {
+                    int startY = 28;
+                    int itemH = 24;
+                    if (localY >= startY && localY < startY + 11 * itemH)
+                    {
+                        int idx = (int)((localY - startY) / itemH);
+                        if (idx >= 0 && idx < 11)
+                        {
+                            _subIndex = idx;
+                            if (leftClick)
+                            {
+                                if (idx == 8)
+                                {
+                                    State = GameState.Rebind;
+                                    _subIndex = 0;
+                                }
+                                else if (idx == 9)
+                                {
+                                    ResetAllToDefaults();
+                                }
+                                else if (idx == 10)
+                                {
+                                    State = _returnToPause ? GameState.Paused : GameState.MainMenu;
+                                }
+                                else
+                                {
+                                    int dir = localX < 120 ? -3 : -4;
+                                    HandleOptionsInput(dir);
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+
+            case GameState.Rebind:
+                if (_rebindingAction >= 0) return;
+                if (localX >= 10 && localX <= 230)
+                {
+                    int startY = 28;
+                    int itemH = 24;
+                    if (localY >= startY && localY < startY + 10 * itemH)
+                    {
+                        int idx = (int)((localY - startY) / itemH);
+                        if (idx >= 0 && idx < 10)
+                        {
+                            _subIndex = idx;
+                            if (leftClick)
+                            {
+                                if (idx < 8)
+                                {
+                                    _rebindingAction = idx;
+                                }
+                                else if (idx == 8)
+                                {
+                                    _inputRouter.ResetToDefaults();
+                                }
+                                else if (idx == 9)
+                                {
+                                    State = _returnToPause ? GameState.Paused : GameState.Options;
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+
+            case GameState.Paused:
+                if (localX >= 20 && localX <= 220)
+                {
+                    int startY = 105;
+                    int itemH = 32;
+                    if (localY >= startY && localY < startY + 4 * itemH)
+                    {
+                        int idx = (int)((localY - startY) / itemH);
+                        if (idx >= 0 && idx < 4)
+                        {
+                            _menuIndex = idx;
+                            if (leftClick) HandlePauseInput(-5);
+                        }
+                    }
+                }
+                break;
+
+            case GameState.HighScores:
+            case GameState.Help:
+            case GameState.GameOver:
+            case GameState.Victory:
+                if (leftClick)
+                {
+                    State = GameState.MainMenu;
+                    _menuIndex = 0;
+                }
+                break;
         }
     }
 
