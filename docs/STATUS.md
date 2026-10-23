@@ -125,4 +125,21 @@
 ### 3. What is Still Unknown
 - None. The PC source port is complete and verified according to all specifications.
 
+## Post-Phase 7 Bugfix: Level Start Initialization Crash
+
+### 1. Root Cause
+- When starting a level from Level/Ranger Select, `StartGame` called `Game.e()`.
+- Early in `Game.e()`, `var_g_a.serviceRepaints()` was called to paint the initial frame/loading screen.
+- In the PC port, `serviceRepaints()` called `repaint()` -> `Game.d()` -> `m()` to render HUD elements.
+- At this stage of `e()`, the player actor (`var_a_f`) was not yet instantiated and magic meter limits (`am`) were `0`.
+- In `Game.a(3, 10, 57, an, am, ...)`, integer division `n8 * n4 / n5` evaluated `n5 = am = 0`, throwing `System.DivideByZeroException`.
+
+### 2. Resolution & Verification
+- **`Game.cs:d()`**: Added guard `if (var_boolean_l || var_a_f == null) return;` so rendering is bypassed during level initialization before the player actor is instantiated.
+- **`Game.cs:a(...)`**: Added guard `if (gr == null || n5 <= 0) return;` to prevent division by zero whenever a meter max denominator is 0.
+- **`MenuSystem.cs`**: Added clean lifecycle cleanup when game level ends.
+- Re-ran `tools/run_tests.ps1`: all 608 simulation ticks and all 7 frame tests pass with 0 differences.
+- Verified live game execution with no crashes.
+
+
 
