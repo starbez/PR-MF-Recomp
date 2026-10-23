@@ -147,6 +147,24 @@
 - **Menu Option:** Added `FRAME RATE: < SMOOTH (60) / ORIGINAL (14) >`, default Smooth (60).
 - **Validation:** Tweak is OFF by default in `PR.Core` and test runners; all 608 ticks and 7 frames pass 100% bit-identical.
 
+## Task 3: Widescreen 16:9 Extension
+
+### 1. Diagnosis & Implementation
+- **Internal Resolution:** 16:9 widescreen canvas ($568 \times 320$) implemented in `EngineTweaks.cs` and `GameView.cs`.
+- **Level & Background Tiling:** `Game.cs:d()` and `TileMap.cs:void_b` updated to render extended tile columns across 568 px. Parallax backgrounds repeat/tile horizontally, and solid fills expand to screen width to prevent black letterbox bars inside the gameplay area.
+- **Camera-Based Activation Check:**
+  - Audited `Game.cs:boolean_a(Actor)`: Original logic tests `a2.G >= this.ac - 140 && a2.G <= this.ac + 140` (a 280-pixel horizontal window around camera center `ac`).
+  - Analysis: In 240-width mode, screen half-width is 120, so activation occurs 20 px beyond screen edge. In 568-width mode, screen half-width is 284. If activation were tied to the widescreen edges, enemies would spawn earlier and alter gameplay/RNG order.
+  - Solution: Preserved the exact original activation rectangle `[-140, +140]` based on camera center `ac`. Logic and enemy AI timing remain 100% identical.
+- **HUD & Menu Anchoring:**
+  - Player health & energy gauges anchored to top-left.
+  - Score display centered at screen midpoint (`renderW >> 1`).
+  - Boss health bar centered at `(renderW - 240) / 2`.
+  - Dialogue/subtitles centered dynamically.
+  - Menus and cutscene cards centered horizontally with decorative top/bottom headers spanning the full width.
+- **Menu Option:** Added `SCREEN: < WIDESCREEN / ORIGINAL >`, default Widescreen.
+- **Validation:** When `EngineTweaks.Widescreen = false` in tests, 240-width branch runs bit-identically (`ALL VALIDATIONS PASSED`).
+
 
 
 

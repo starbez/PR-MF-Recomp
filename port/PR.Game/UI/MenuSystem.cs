@@ -48,13 +48,16 @@ public sealed class MenuSystem
     private static readonly string[] RangerNames = { "NICK (RED)", "CHIP (YELLOW)", "MADISON (BLUE)", "VIDA (PINK)", "XANDER (GREEN)" };
     private static readonly string[] RangerElements = { "FIRE / BALANCED", "LIGHTNING / SPEED", "WATER / MAGIC", "WIND / AGILITY", "EARTH / STRENGTH" };
 
-    public MenuSystem(App app, SaveManager saveManager, MidiPlayer audio, Action<int> onScaleChange, Action onFullscreenToggle)
+    private readonly Action _onWidescreenToggle;
+
+    public MenuSystem(App app, SaveManager saveManager, MidiPlayer audio, Action<int> onScaleChange, Action onFullscreenToggle, Action onWidescreenToggle)
     {
         _app = app;
         _saveManager = saveManager;
         _audio = audio;
         _onScaleChange = onScaleChange;
         _onFullscreenToggle = onFullscreenToggle;
+        _onWidescreenToggle = onWidescreenToggle;
 
         _selectedCharacter = Math.Clamp(_saveManager.Data.SelectedCharacter, 0, 4);
         _audio.IsMuted = !_saveManager.Data.SoundEnabled;
@@ -305,7 +308,7 @@ public sealed class MenuSystem
 
     private void HandleOptionsInput(int key)
     {
-        const int OptionsCount = 7;
+        const int OptionsCount = 8;
         if (key == -1) // UP
         {
             _subIndex = (_subIndex - 1 + OptionsCount) % OptionsCount;
@@ -356,20 +359,27 @@ public sealed class MenuSystem
                     _saveManager.Save();
                     break;
 
-                case 4: // Window Scale
+                case 4: // Screen Mode (Widescreen 16:9 / Original 4:3)
+                    _saveManager.Data.Widescreen = !_saveManager.Data.Widescreen;
+                    PR.Core.EngineTweaks.Widescreen = _saveManager.Data.Widescreen;
+                    _onWidescreenToggle();
+                    _saveManager.Save();
+                    break;
+
+                case 5: // Window Scale
                     int nextScale = Math.Clamp(_saveManager.Data.Scale + dir, 1, 5);
                     _saveManager.Data.Scale = nextScale;
                     _onScaleChange(nextScale);
                     _saveManager.Save();
                     break;
 
-                case 5: // Fullscreen Toggle
+                case 6: // Fullscreen Toggle
                     _onFullscreenToggle();
                     _saveManager.Data.Fullscreen = !_saveManager.Data.Fullscreen;
                     _saveManager.Save();
                     break;
 
-                case 6: // Test Audio
+                case 7: // Test Audio
                     _audioTestState = (_audioTestState + dir + 4) % 4;
                     if (_audioTestState == 1) PR.Core.Audio.SoundEngine.PlaySoundDirect(1, true);
                     else if (_audioTestState == 2) PR.Core.Audio.SoundEngine.PlaySoundDirect(2, true);
@@ -474,21 +484,27 @@ public sealed class MenuSystem
             return;
         }
 
+        int screenW = PR.Core.EngineTweaks.RenderWidth;
+        int screenH = PR.Core.EngineTweaks.RenderHeight;
+
         // Draw backdrop
         gr.Translate(-gr.GetTranslateX(), -gr.GetTranslateY());
-        gr.SetClip(0, 0, App.var_int_a, App.var_int_b);
+        gr.SetClip(0, 0, screenW, screenH);
         gr.SetColor(0x0C0E14);
-        gr.FillRect(0, 0, App.var_int_a, App.var_int_b);
+        gr.FillRect(0, 0, screenW, screenH);
 
         // Header decorative bars
         gr.SetColor(0x7D0000);
-        gr.FillRect(0, 0, App.var_int_a, 24);
+        gr.FillRect(0, 0, screenW, 24);
         gr.SetColor(0xFFD700);
-        gr.DrawLine(0, 24, App.var_int_a, 24);
+        gr.DrawLine(0, 24, screenW, 24);
         gr.SetColor(0x7D0000);
-        gr.FillRect(0, App.var_int_b - 20, App.var_int_a, 20);
+        gr.FillRect(0, screenH - 20, screenW, 20);
         gr.SetColor(0xFFD700);
-        gr.DrawLine(0, App.var_int_b - 20, App.var_int_a, App.var_int_b - 20);
+        gr.DrawLine(0, screenH - 20, screenW, screenH - 20);
+
+        int centerOffset = PR.Core.EngineTweaks.Widescreen ? (screenW - 240) / 2 : 0;
+        gr.Translate(centerOffset, 0);
 
         switch (State)
         {
@@ -524,6 +540,8 @@ public sealed class MenuSystem
                 RenderGameOver(gr);
                 break;
         }
+
+        gr.Translate(-centerOffset, 0);
     }
 
     private void RenderTitleScreen(Graphics gr)
@@ -676,26 +694,27 @@ public sealed class MenuSystem
             $"SOUND: < {(_saveManager.Data.SoundEnabled ? "ON" : "OFF")} >",
             $"VOLUME: < {_saveManager.Data.Volume / 10}% >",
             $"FRAME RATE: < {(_saveManager.Data.Smooth60Fps ? "SMOOTH (60)" : "ORIGINAL (14)")} >",
+            $"SCREEN: < {(_saveManager.Data.Widescreen ? "WIDESCREEN" : "ORIGINAL")} >",
             $"SCALE: < {_saveManager.Data.Scale}X >",
             $"FULLSCREEN: < {(_saveManager.Data.Fullscreen ? "YES" : "NO")} >",
             $"TEST AUDIO: < {testAudioLabel} >"
         };
 
-        int startY = 40;
+        int startY = 32;
         for (int i = 0; i < items.Length; i++)
         {
             bool sel = i == _subIndex;
             if (sel)
             {
                 gr.SetColor(0x401010);
-                gr.FillRect(10, startY + i * 32 - 3, 220, 24);
+                gr.FillRect(10, startY + i * 31 - 3, 220, 24);
                 gr.SetColor(0xFFD700);
-                gr.DrawRect(10, startY + i * 32 - 3, 219, 23);
-                GMIDlet.a(1, items[i], 120, startY + i * 32, 17);
+                gr.DrawRect(10, startY + i * 31 - 3, 219, 23);
+                GMIDlet.a(1, items[i], 120, startY + i * 31, 17);
             }
             else
             {
-                GMIDlet.a(0, items[i], 120, startY + i * 32, 17);
+                GMIDlet.a(0, items[i], 120, startY + i * 31, 17);
             }
         }
 

@@ -342,9 +342,10 @@ public sealed class Game
         var gr = GMIDlet.var_javax_microedition_lcdui_Graphics_a;
         if (gr == null) return;
 
+        int renderW = EngineTweaks.RenderWidth;
         int camX = EngineTweaks.Smooth60Fps ? RenderCamX : ac;
         int camY = EngineTweaks.Smooth60Fps ? RenderCamY : ad;
-        int n4 = camX - (var_int_c >> 1);
+        int n4 = camX - (renderW >> 1);
         int n5 = camY - (var_int_d >> 1);
 
         gr.Translate(-gr.GetTranslateX(), -gr.GetTranslateY() + var_int_b);
@@ -359,13 +360,13 @@ public sealed class Game
         if (G == D)
         {
             gr.SetColor(0);
-            gr.FillRect(0, 21, var_int_c, 35);
+            gr.FillRect(0, 21, renderW, 35);
         }
 
         if (aD > 0)
         {
             gr.SetColor((aD & 1) == 0 ? 0xFF0000 : 0xFFFFFF);
-            gr.FillRect(0, 0, var_int_c, var_int_d);
+            gr.FillRect(0, 0, renderW, var_int_d);
         }
         else if (var_c_arr_a != null)
         {
@@ -377,7 +378,7 @@ public sealed class Game
             }
         }
 
-        gr.SetClip(0, 0, var_int_c, var_int_d);
+        gr.SetClip(0, 0, renderW, var_int_d);
         if (!var_boolean_h)
         {
             Actor.a(var_a_arr_a, -n4, -n5, 2);
@@ -432,7 +433,7 @@ public sealed class Game
             }
         }
 
-        gr.SetClip(0, 0, var_int_c, var_int_d);
+        gr.SetClip(0, 0, renderW, var_int_d);
         if (!var_boolean_h)
         {
             Actor.a(var_a_arr_d, -n4, -n5, 2);
@@ -442,16 +443,16 @@ public sealed class Game
         m();
 
         gr.Translate(-gr.GetTranslateX(), -gr.GetTranslateY() + var_int_b);
-        gr.SetClip(0, 0, var_int_c, var_int_d);
+        gr.SetClip(0, 0, renderW, var_int_d);
 
         if (au != 0)
         {
             gr.SetColor(0);
-            gr.FillRect(0, 0, var_int_c, au);
-            gr.FillRect(0, var_int_d - au, var_int_c, au);
+            gr.FillRect(0, 0, renderW, au);
+            gr.FillRect(0, var_int_d - au, renderW, au);
             gr.SetColor(0xFFFFFF);
-            gr.DrawLine(0, au, var_int_c, au);
-            gr.DrawLine(0, var_int_d - au, var_int_c, var_int_d - au);
+            gr.DrawLine(0, au, renderW, au);
+            gr.DrawLine(0, var_int_d - au, renderW, var_int_d - au);
         }
 
         if (ax > 0 && var_java_lang_String_arr_a != null)
@@ -459,9 +460,9 @@ public sealed class Game
             --ax;
             int n3 = GMIDlet.c(0);
             int n2 = var_java_lang_String_arr_a.Length * n3 + 6;
-            int n = var_a_j != null ? var_a_j.var_int_d - n4 : var_int_e;
+            int n = var_a_j != null ? var_a_j.var_int_d - n4 : (renderW >> 1);
             int n6 = var_a_j != null ? var_a_j.var_int_e - n5 - 55 - n2 : var_int_f - (n2 >> 1);
-            if ((n -= aw >> 1) > var_int_c - aw) n = var_int_c - aw;
+            if ((n -= aw >> 1) > renderW - aw) n = renderW - aw;
             if (n < 0) n = 0;
             if (n6 < 20) n6 = 20;
 
@@ -491,7 +492,7 @@ public sealed class Game
         {
             if (App.var_java_lang_String_arr_a != null && App.var_java_lang_String_arr_a.Length > 41)
             {
-                GMIDlet.a(1, App.var_java_lang_String_arr_a[41], var_int_c - 1, var_int_d, 40);
+                GMIDlet.a(1, App.var_java_lang_String_arr_a[41], renderW - 1, var_int_d, 40);
             }
         }
         GMIDlet.a(26, 2, var_int_d - 2, 36);
@@ -502,14 +503,16 @@ public sealed class Game
         var gr = GMIDlet.var_javax_microedition_lcdui_Graphics_a;
         if (gr == null) return;
 
+        int renderW = EngineTweaks.RenderWidth;
         gr.Translate(-gr.GetTranslateX(), -gr.GetTranslateY());
-        gr.SetClip(0, 0, var_int_c, var_int_d + var_int_b);
+        gr.SetClip(0, 0, renderW, var_int_d + var_int_b);
 
         if (var_a_i != null && var_a_i.var_boolean_j && GMIDlet.var_javax_microedition_lcdui_Image_arr_a != null)
         {
             var bossFrame = GMIDlet.var_javax_microedition_lcdui_Image_arr_a[14];
-            if (bossFrame != null) gr.DrawImage(bossFrame, 0, 24, 20);
-            a(10, 26, 84, var_a_i.z, var_a_i.A, 16774248, 15885602);
+            int bossX = EngineTweaks.Widescreen ? (renderW - 240) / 2 : 0;
+            if (bossFrame != null) gr.DrawImage(bossFrame, bossX, 24, 20);
+            a(bossX + 10, 26, 84, var_a_i.z, var_a_i.A, 16774248, 15885602);
         }
 
         if (GMIDlet.var_javax_microedition_lcdui_Image_arr_a != null)
@@ -546,7 +549,15 @@ public sealed class Game
                 ? App.var_java_lang_String_arr_a[32] : "SCORE";
             var_java_lang_String_b_hud = prefix + ":" + App.var_int_g;
         }
-        GMIDlet.a(1, var_java_lang_String_b_hud, 120, 5, 20);
+
+        if (EngineTweaks.Widescreen)
+        {
+            GMIDlet.a(1, var_java_lang_String_b_hud, renderW >> 1, 5, 17);
+        }
+        else
+        {
+            GMIDlet.a(1, var_java_lang_String_b_hud, 120, 5, 20);
+        }
     }
 
     private void a(int n, int n2, int n3, int n4)

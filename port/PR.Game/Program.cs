@@ -84,11 +84,14 @@ public static class Program
             midiPlayer.Volume = saveManager.Data.Volume;
             PR.Core.Audio.SoundEngine.Enabled = saveManager.Data.SoundEnabled;
 
+            PR.Core.EngineTweaks.Smooth60Fps = saveManager.Data.Smooth60Fps;
+            PR.Core.EngineTweaks.Widescreen = saveManager.Data.Widescreen;
+
             using var view = new GameView(saveManager.Data.Scale, saveManager.Data.Fullscreen);
             var inputRouter = new InputRouter();
 
-            // 5. Setup 240x320 Software Screen
-            var screen = PR.Core.Graphics.Image.CreateImage(GameView.BaseWidth, GameView.BaseHeight);
+            // 5. Setup Software Screen
+            var screen = PR.Core.Graphics.Image.CreateImage(view.CurrentWidth, GameView.BaseHeight);
             var gr = screen.GetGraphics();
             GMIDlet.var_javax_microedition_lcdui_Graphics_a = gr;
 
@@ -98,7 +101,14 @@ public static class Program
                 saveManager,
                 midiPlayer,
                 onScaleChange: newScale => view.SetScale(newScale),
-                onFullscreenToggle: () => view.ToggleFullscreen()
+                onFullscreenToggle: () => view.ToggleFullscreen(),
+                onWidescreenToggle: () =>
+                {
+                    view.UpdateWidescreenMode();
+                    screen = PR.Core.Graphics.Image.CreateImage(view.CurrentWidth, GameView.BaseHeight);
+                    gr = screen.GetGraphics();
+                    GMIDlet.var_javax_microedition_lcdui_Graphics_a = gr;
+                }
             );
 
             // 7. Main Game Loop (Fixed 70ms step, 60fps presentation)

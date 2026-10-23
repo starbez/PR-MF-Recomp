@@ -1,30 +1,36 @@
 using System;
 using System.Numerics;
 using Raylib_cs;
+using PR.Core;
 using PRImage = PR.Core.Graphics.Image;
 
 namespace PR.Game.UI;
 
 public sealed class GameView : IDisposable
 {
-    public const int BaseWidth = 240;
-    public const int BaseHeight = 320;
+    public const int BaseWidth = EngineTweaks.BaseWidth;
+    public const int BaseHeight = EngineTweaks.BaseHeight;
+    public const int MaxWidth = EngineTweaks.WidescreenWidth;
 
     private readonly Texture2D _screenTexture;
     private readonly Raylib_cs.Image _raylibImage;
     private int _scale;
     private bool _fullscreen;
+    private int _activeCanvasWidth;
 
     public int Scale => _scale;
     public bool IsFullscreen => _fullscreen;
+    public int CurrentWidth => EngineTweaks.RenderWidth;
+    public int CurrentHeight => EngineTweaks.RenderHeight;
 
     public unsafe GameView(int scale, bool fullscreen)
     {
         _scale = Math.Clamp(scale, 1, 6);
         _fullscreen = fullscreen;
+        _activeCanvasWidth = CurrentWidth;
 
         Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
-        Raylib.InitWindow(BaseWidth * _scale, BaseHeight * _scale, "Power Rangers: Mystic Force");
+        Raylib.InitWindow(CurrentWidth * _scale, CurrentHeight * _scale, "Power Rangers: Mystic Force");
         Raylib.SetTargetFPS(60);
 
         if (_fullscreen)
@@ -32,8 +38,8 @@ public sealed class GameView : IDisposable
             Raylib.ToggleFullscreen();
         }
 
-        // Create Raylib image and texture for 240x320 ARGB
-        _raylibImage = Raylib.GenImageColor(BaseWidth, BaseHeight, Color.Black);
+        // Allocate maximum texture size (568x320)
+        _raylibImage = Raylib.GenImageColor(MaxWidth, BaseHeight, Color.Black);
         _screenTexture = Raylib.LoadTextureFromImage(_raylibImage);
         Raylib.SetTextureFilter(_screenTexture, TextureFilter.Point);
     }
@@ -49,19 +55,29 @@ public sealed class GameView : IDisposable
         _scale = Math.Clamp(scale, 1, 6);
         if (!_fullscreen)
         {
-            Raylib.SetWindowSize(BaseWidth * _scale, BaseHeight * _scale);
+            Raylib.SetWindowSize(CurrentWidth * _scale, CurrentHeight * _scale);
+        }
+    }
+
+    public void UpdateWidescreenMode()
+    {
+        _activeCanvasWidth = CurrentWidth;
+        if (!_fullscreen)
+        {
+            Raylib.SetWindowSize(CurrentWidth * _scale, CurrentHeight * _scale);
         }
     }
 
     public unsafe void UpdateFromCanvas(PRImage canvas)
     {
         if (canvas == null) return;
+        _activeCanvasWidth = canvas.Width;
 
-        // Convert PRImage ARGB uint[] to Raylib Color/BGRA/RGBA
+        int count = Math.Min(canvas.Width * canvas.Height, MaxWidth * BaseHeight);
         fixed (uint* src = canvas.Pixels)
         {
             Color* dst = (Color*)_raylibImage.Data;
-            for (int i = 0; i < BaseWidth * BaseHeight; i++)
+            for (int i = 0; i < count; i++)
             {
                 uint pixel = src[i];
                 byte a = (byte)(pixel >> 24);
@@ -80,13 +96,16 @@ public sealed class GameView : IDisposable
         int winWidth = Raylib.GetScreenWidth();
         int winHeight = Raylib.GetScreenHeight();
 
+        int curW = _activeCanvasWidth;
+        int curH = BaseHeight;
+
         // Calculate maximum integer scale that fits the window
-        int scaleX = winWidth / BaseWidth;
-        int scaleY = winHeight / BaseHeight;
+        int scaleX = winWidth / curW;
+        int scaleY = winHeight / curH;
         int intScale = Math.Max(1, Math.Min(scaleX, scaleY));
 
-        int drawW = BaseWidth * intScale;
-        int drawH = BaseHeight * intScale;
+        int drawW = curW * intScale;
+        int drawH = curH * intScale;
         int posX = (winWidth - drawW) / 2;
         int posY = (winHeight - drawH) / 2;
 
@@ -94,7 +113,7 @@ public sealed class GameView : IDisposable
         Raylib.ClearBackground(Color.Black);
 
         // Draw game screen texture scaled with point filtering
-        var srcRec = new Rectangle(0, 0, BaseWidth, BaseHeight);
+        var srcRec = new Rectangle(0, 0, curW, curH);
         var dstRec = new Rectangle(posX, posY, drawW, drawH);
         Raylib.DrawTexturePro(_screenTexture, srcRec, dstRec, Vector2.Zero, 0.0f, Color.White);
 

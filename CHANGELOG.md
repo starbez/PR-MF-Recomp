@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - Upgrades & Fixes: Task 3 (Widescreen 16:9 Extension)
+### Added
+- Extended internal rendering resolution to 16:9 aspect ratio (568x320) via `EngineTweaks.Widescreen`:
+  - Shows more of the level on left and right without stretching original pixels.
+  - Parallax backgrounds and color fills automatically extended to fill the full 568 px width; background images tile horizontally to avoid empty bars.
+  - Tilemap renderer (`TileMap.void_b`) extended to render all columns across the wider viewport.
+  - Camera-based activation rectangle (`Game.boolean_a(Actor)`) strictly preserved at original $[-140, +140]$ relative to camera center `ac`, ensuring zero change to enemy spawn, despawn, or AI triggers.
+  - HUD elements anchored cleanly: player health and energy anchored to top-left, score display centered at screen midpoint, boss health bar centered, dialogue/subtitles centered, softkey prompts anchored to bottom corners.
+  - UI and cutscene screens centered within the wider canvas with decorative framing bars spanning the full display width.
+  - Added Screen Mode option in Options menu: `SCREEN: < WIDESCREEN / ORIGINAL >`, default Widescreen.
+  - Tweak defaults to OFF in tests to guarantee 100% bit-for-bit trace and frame verification.
+
 ## [1.2.0] - Upgrades & Fixes: Task 2 (60 FPS Sub-Frame Interpolation)
 ### Added
 - Implemented smooth sub-frame interpolation (`EngineTweaks.Smooth60Fps`) for camera and actors:

@@ -238,25 +238,54 @@ public sealed class TileMap
             var gr = GMIDlet.var_javax_microedition_lcdui_Graphics_a;
             if (gr == null || var_javax_microedition_lcdui_Image_b == null) return;
 
-            if (n5 > 0 && n6 > 0)
+            if (!EngineTweaks.Widescreen)
             {
-                gr.SetClip(0, 0, n5, n6);
-                gr.DrawImage(var_javax_microedition_lcdui_Image_b, -(n3 + (w << var_int_a)), -(n4 + (x << var_int_a)), 20);
+                if (n5 > 0 && n6 > 0)
+                {
+                    gr.SetClip(0, 0, n5, n6);
+                    gr.DrawImage(var_javax_microedition_lcdui_Image_b, -(n3 + (w << var_int_a)), -(n4 + (x << var_int_a)), 20);
+                }
+                if (n7 > 0 && n6 > 0)
+                {
+                    gr.SetClip(n5, 0, n7, n6);
+                    gr.DrawImage(var_javax_microedition_lcdui_Image_b, n5, -(n4 + (x << var_int_a)), 20);
+                }
+                if (n5 > 0 && n8 > 0)
+                {
+                    gr.SetClip(0, n6, n5, n8);
+                    gr.DrawImage(var_javax_microedition_lcdui_Image_b, -(n3 + (w << var_int_a)), n6, 20);
+                }
+                if (n7 > 0 && n8 > 0)
+                {
+                    gr.SetClip(n5, n6, n7, n8);
+                    gr.DrawImage(var_javax_microedition_lcdui_Image_b, n5, n6, 20);
+                }
+                return;
             }
-            if (n7 > 0 && n6 > 0)
+
+            int screenW = EngineTweaks.RenderWidth;
+            for (int ox = 0; ox < screenW; ox += s)
             {
-                gr.SetClip(n5, 0, n7, n6);
-                gr.DrawImage(var_javax_microedition_lcdui_Image_b, n5, -(n4 + (x << var_int_a)), 20);
-            }
-            if (n5 > 0 && n8 > 0)
-            {
-                gr.SetClip(0, n6, n5, n8);
-                gr.DrawImage(var_javax_microedition_lcdui_Image_b, -(n3 + (w << var_int_a)), n6, 20);
-            }
-            if (n7 > 0 && n8 > 0)
-            {
-                gr.SetClip(n5, n6, n7, n8);
-                gr.DrawImage(var_javax_microedition_lcdui_Image_b, n5, n6, 20);
+                if (n5 > 0 && n6 > 0 && ox < screenW)
+                {
+                    gr.SetClip(ox, 0, Math.Min(n5, screenW - ox), n6);
+                    gr.DrawImage(var_javax_microedition_lcdui_Image_b, ox - (n3 + (w << var_int_a)), -(n4 + (x << var_int_a)), 20);
+                }
+                if (n7 > 0 && n6 > 0 && ox + n5 < screenW)
+                {
+                    gr.SetClip(ox + n5, 0, Math.Min(n7, screenW - (ox + n5)), n6);
+                    gr.DrawImage(var_javax_microedition_lcdui_Image_b, ox + n5, -(n4 + (x << var_int_a)), 20);
+                }
+                if (n5 > 0 && n8 > 0 && ox < screenW)
+                {
+                    gr.SetClip(ox, n6, Math.Min(n5, screenW - ox), n8);
+                    gr.DrawImage(var_javax_microedition_lcdui_Image_b, ox - (n3 + (w << var_int_a)), n6, 20);
+                }
+                if (n7 > 0 && n8 > 0 && ox + n5 < screenW)
+                {
+                    gr.SetClip(ox + n5, n6, Math.Min(n7, screenW - (ox + n5)), n8);
+                    gr.DrawImage(var_javax_microedition_lcdui_Image_b, ox + n5, n6, 20);
+                }
             }
             return;
         }
@@ -268,7 +297,8 @@ public sealed class TileMap
         if (u > q) u = q;
         if (v > r) v = r;
 
-        int n9 = u + y;
+        int drawTilesX = EngineTweaks.Widescreen ? ((EngineTweaks.RenderWidth + (var_int_b >> 1) + 1) >> var_int_a) + 2 : y;
+        int n9 = u + drawTilesX;
         int n10 = v + z;
         var_javax_microedition_lcdui_Graphics_a = GMIDlet.var_javax_microedition_lcdui_Graphics_a;
         w = 0;
