@@ -9,20 +9,20 @@
 - [x] Disassemble all classes to bytecode (`javap`).
 - [x] Verify claims in Section 1 and initialize `docs/PowerRangers-analysis.md`.
 
-## Phase 2: Code Reading & Annotation [IN PROGRESS]
-- [ ] Map obfuscated fields and methods for:
-  - [ ] `GMIDlet`
-  - [ ] `g` (Canvas, main loop, state machine, RMS, text)
-  - [ ] `a` (Sprite & animation manager)
-  - [ ] `e` (Audio engine & MIME player)
-  - [ ] `d` (Menu manager & forms)
-  - [ ] `b` (UI widget items)
-  - [ ] `c` (Tilemap, camera, tile collisions)
-  - [ ] `f` (Gameplay, player physics, enemies, bosses, weapons)
-- [ ] Resolve CFR trouble spots (`q`, `h`, `i`, `k`, `a`) from bytecode in `g`.
-- [ ] Document loop timing, key mappings, RNG order, RecordStore format.
-- [ ] Generate Mermaid state diagram for `g`.
-- [ ] Document gameplay tick pipeline in `f`.
+## Phase 2: Code Reading & Annotation [DONE]
+- [x] Map obfuscated fields and methods for:
+  - [x] `GMIDlet`
+  - [x] `g` (Canvas, main loop, state machine, RMS, text)
+  - [x] `a` (Sprite & animation manager)
+  - [x] `e` (Audio engine & MIME player)
+  - [x] `d` (Menu manager & forms)
+  - [x] `b` (UI widget items)
+  - [x] `c` (Tilemap, camera, tile collisions)
+  - [x] `f` (Gameplay, player physics, enemies, bosses, weapons)
+- [x] Resolve CFR trouble spots (`q`, `h`, `i`, `k`, `a`) from bytecode in `g`.
+- [x] Document loop timing, key mappings, RNG order, RecordStore format.
+- [x] Generate Mermaid state diagram for `g`.
+- [x] Document gameplay tick pipeline in `f`.
 
 ## Phase 3: Resource Formats & Independent Parsers [UPCOMING]
 - [ ] Parse `lang` and `text__*.txt`.

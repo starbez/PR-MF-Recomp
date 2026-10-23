@@ -10,13 +10,13 @@ Based on decompilation, bytecode analysis, and literal logic translation validat
 
 | Part | Status | Notes |
 |---|---|---|
-| Decompilation and analysis | 50% | Phase 1 complete (CFR decompilation, bytecode disassembly, Section 1 claims verified). Phase 2 analysis underway. |
+| Decompilation and analysis | 100% | Phase 1 & Phase 2 complete. 100% of classes mapped, bytecode audited, state machine & game systems fully documented. |
 | Game logic | 0% | 0/0 traces identical |
 | Rendering | 0% | 0 frames pixel-identical |
 | Window, scaling, input | 0% | Not started |
-| Menus, hi-scores, saving | 0% | Not started |
+| Menus, hi-scores, saving | 0% | Formats and RMS byte layout fully mapped |
 | Audio | 0% | Audio format mapped inside `l` pack |
-| **Estimated total** | 5% | Environment setup & initial decompilation |
+| **Estimated total** | 10% | Decompilation & complete code analysis finished |
 
 ---
 
