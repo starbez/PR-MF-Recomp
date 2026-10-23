@@ -30,3 +30,4 @@ __pycache__/
 # OS files
 Thumbs.db
 Desktop.ini
+crash.log

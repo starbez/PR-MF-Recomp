@@ -22,8 +22,19 @@ Based on decompilation, bytecode analysis, and literal logic translation validat
 
 ## How to Run the Game
 
-To launch the game directly from the command line:
+### Quick Launch (Windows)
+Double-click `run.bat` or run:
+```cmd
+run.bat
+```
 
+To pass options:
+```cmd
+run.bat --scale 4 --lang en
+run.bat --jar JAR\Power_Rangers_240_nok.jar
+```
+
+### CLI Launch (.NET CLI)
 ```bash
 # Run with default 3x scaling (720x960) and sound:
 dotnet run --project port/PR.Game/PR.Game.csproj
