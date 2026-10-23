@@ -1,0 +1,7 @@
+# Survival Mode Script (150 ticks)
+5 press 54
+30 press 53
+33 release 53
+60 press 50
+80 release 50
+100 release 54

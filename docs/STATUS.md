@@ -1,29 +1,26 @@
 # Project Status Notes
 
-## Status after Phase 3 (Resource Formats & Independent Parsers)
+## Status after Phase 4 (Headless Validation Harness)
 
 ### 1. What is Done
-- Authored independent Python parsers for every resource family under `tools/`:
-  - `tools/decode_text.py`: `lang` and `text__{de,en,fr,it}.txt` (all 6 arrays, 222 strings per file).
-  - `tools/parse_pngs.py`: Length-prefixed PNGs (`lm`, `lp__*`, `lpok`, `subtitle__*`, `bg*`, `font`, `i.png`).
-  - `tools/parse_sprites.py`: `s0..s64` (all 55 sprite files, 65 variant PNGs).
-  - `tools/parse_blocks.py`: `b0..b12` (13 block files, 16x16 tiles).
-  - `tools/parse_level.py`: `l0..l12` (13 level layout files, entities, spawns, splines).
-  - `tools/parse_pack.py`: `fr` (660 rects), `spr` (40 sprite animation definitions), and master pack `l` (29 images + audio).
-- Extracted and verified both game audio tracks from `/l` into `sons/`:
-  - `sons/sound_1.mid`: Title/Menu theme (4,626 bytes, Standard MIDI format).
-  - `sons/sound_2.mid`: In-game Combat theme (7,076 bytes, Standard MIDI format).
-- Ran `tools/test_parsers.py`: **ALL 107/107 files** in the JAR are consumed with 0 leftover bytes and 0 overruns.
-- Authored `docs/FORMATS.md` with complete byte-level specifications.
+- Built clean-room Java MIDP 2.0 / MMAPI stubs in `tools/harness/`:
+  - `MIDlet`, `Displayable`, `Display`, `Canvas`, `Font`, `Image`, `Graphics`, `RecordStore`, `Manager`, `Player`, `VolumeControl`, `Controllable`.
+- Implemented `tools.HarnessClk` and `tools.HarnessClassLoader`:
+  - Zero-sleep clock patch for instant execution (~10,000 ticks/sec).
+  - Fixed-seed PRNG initialization for 100% deterministic runs.
+- Authored input scripts in `tools/scripts/`: `idle_100.txt`, `movement_150.txt`, `combat_200.txt`, `survival_150.txt`.
+- Built `tools/record_traces.sh` / `tools/record_traces.ps1`:
+  - Successfully generated and double-run verified all 4 ground truth trace sets with 0 differences (`idle_level1.txt`, `movement_level1.txt`, `combat_level1.txt`, `survival_level1.txt`).
+- Built `tools/record_frames.sh` / `tools/record_frames.ps1`:
+  - Dumped reference ground-truth frames at ticks 0, 25, 50, 75, 100, 125, 149 into `frames/level1_movement/`.
+- Authored `docs/VALIDATION.md` detailing harness architecture, determinism, and trace schema.
 
 ### 2. What is Verified vs. Inferred
-- **100% of Resource Formats: [verified]**
-  - Confirmed via independent round-trip binary consumption matching decompiled loaders.
-  - Palette swapping via runtime PLTE byte replacement is completely decoded.
-  - Decompiler artifact in `f.a_a` (spurious duplicate `readByte()`) resolved via bytecode.
-- **Audio Blobs: [verified]**
-  - Audio files are confirmed to be Standard MIDI files (`MThd` magic).
+- **Headless Bytecode Execution: [verified]**
+  - Confirmed running original `extracted/*.class` files directly on OpenJDK 21 without phone emulation.
+  - Repeated executions produce identical bit-for-bit hashes across all traces.
+- **Reference Frames: [verified]**
+  - Ground truth 240x320 PNG frames recorded and available for Phase 6 comparison.
 
 ### 3. What is Still Unknown
-- None for resource formats or asset loading. All formats are 100% understood and validated.
-- Ready for Phase 4: Headless Validation Harness in Java.
+- None. Ground truth traces are established and ready for Phase 5 (Literal C# port).

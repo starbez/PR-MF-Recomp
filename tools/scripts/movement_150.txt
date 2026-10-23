@@ -1,0 +1,9 @@
+# Movement Script (150 ticks)
+5 press 54
+35 press 50
+55 release 50
+70 release 54
+80 press 52
+110 release 52
+120 press 56
+140 release 56

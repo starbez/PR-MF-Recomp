@@ -11,12 +11,12 @@ Based on decompilation, bytecode analysis, and literal logic translation validat
 | Part | Status | Notes |
 |---|---|---|
 | Decompilation and analysis | 100% | Phase 1 & 2 complete. All classes analyzed, bytecode audited, state machine documented. |
-| Game logic | 0% | 0/0 traces identical |
-| Rendering | 0% | 0 frames pixel-identical |
+| Game logic | 15% | Ground-truth traces recorded and double-run verified on original bytecode. |
+| Rendering | 15% | Reference frames recorded from original bytecode for frame validation. |
 | Window, scaling, input | 0% | Not started |
 | Menus, hi-scores, saving | 0% | Formats and RMS byte layout fully mapped |
 | Audio | 50% | Both MIDI tracks extracted from `l` pack to `sons/` and verified |
-| **Estimated total** | 18% | Phase 1-3 complete: 107/107 resource formats verified by independent parsers |
+| **Estimated total** | 25% | Phase 1-4 complete: Validation harness and ground truth traces established |
 
 ---
 

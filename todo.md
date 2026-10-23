@@ -35,12 +35,15 @@
 - [x] Document all formats in `docs/FORMATS.md`.
 - [x] Automated verification suite `tools/test_parsers.py` passes 107/107 files.
 
-## Phase 4: Headless Validation Harness [IN PROGRESS]
-- [ ] Build MIDP stubs in Java (`tools/harness/`).
-- [ ] Deterministic clock (70ms tick) & fixed RNG seeding.
-- [ ] State trace recorder & frame dumper.
+## Phase 4: Headless Validation Harness [DONE]
+- [x] Build MIDP stubs in Java (`tools/harness/`).
+- [x] Deterministic clock (70ms tick) & fixed RNG seeding.
+- [x] State trace recorder & frame dumper.
+- [x] Input scripts generated (`tools/scripts/`).
+- [x] Record ground truth traces and verify identical repeated runs.
+- [x] Record reference frames.
 
-## Phase 5: C# Core Logic Port [UPCOMING]
+## Phase 5: C# Core Logic Port [IN PROGRESS]
 - [ ] Implement `PR.Core` replicating exact logic.
 - [ ] Match traces 100% against Java harness.
 

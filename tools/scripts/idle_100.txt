@@ -1,0 +1,2 @@
+# Deterministic Idle Script (100 ticks)
+# Format: tick [press|release] key_code

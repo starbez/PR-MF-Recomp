@@ -1,0 +1,17 @@
+# Combat Script (200 ticks)
+5 press 54
+25 press 53
+28 release 53
+35 press 53
+38 release 53
+45 press 53
+48 release 53
+70 release 54
+80 press 50
+85 press 53
+88 release 53
+100 release 50
+120 press 54
+150 press 53
+153 release 53
+180 release 54

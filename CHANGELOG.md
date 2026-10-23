@@ -2,7 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased] - Phase 3 Complete
+## [Unreleased] - Phase 4 Complete
+### Added
+- Clean-room Java MIDP 2.0 / MMAPI harness in `tools/harness/`:
+  - `MIDlet`, `Displayable`, `Display`, `Canvas`, `Font`, `Image`, `Graphics`, `RecordStore`, `Manager`, `Player`, `VolumeControl`, `Controllable`.
+- Zero-sleep bytecode clock patching via `tools.HarnessClk` and `tools.HarnessClassLoader`.
+- Input scripts in `tools/scripts/`: `idle_100.txt`, `movement_150.txt`, `combat_200.txt`, `survival_150.txt`.
+- Verification scripts `tools/record_traces.sh` / `tools/record_traces.ps1` proving identical trace output across repeated executions.
+- Reference frame capture script `tools/record_frames.sh` / `tools/record_frames.ps1` dumping frames to `frames/`.
+- Authored validation documentation in `docs/VALIDATION.md`.
+- Updated status notes in `docs/STATUS.md`.
+
+## [0.3.0] - Phase 3 Complete
 ### Added
 - Independent Python format parsers in `tools/`:
   - `decode_text.py`: `lang` and `text__*.txt` (6 string arrays per language, 222 strings each).
