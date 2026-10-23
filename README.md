@@ -13,10 +13,48 @@ Based on decompilation, bytecode analysis, and literal logic translation validat
 | Decompilation and analysis | 100% | Phase 1 & 2 complete. All classes analyzed, bytecode audited, state machine documented. |
 | Game logic | 100% | Phase 5 complete: Literal C# port (`PR.Core`) verified 100% bit-identical line-for-line across all 4 trace sets (608 ticks). |
 | Rendering | 100% | Phase 6 complete: Software renderer verified 100% pixel-identical (76,800/76,800 pixels) across all 7 reference frames. |
-| Window, scaling, input | 0% | Phase 7 |
-| Menus, hi-scores, saving | 25% | Formats and RMS byte layout fully mapped, serialization ported |
-| Audio | 50% | Both MIDI tracks extracted from `l` pack to `sons/` and verified |
-| **Estimated total** | 75% | Phases 1-6 complete. Logic and rendering verified bit-identical to original J2ME bytecode. |
+| Window, scaling, input | 100% | Phase 7 complete: Raylib desktop window, integer scaling (1x..5x), fullscreen (F11), remappable Keyboard & Gamepad `InputRouter`. |
+| Menus, hi-scores, saving | 100% | Phase 7 complete: `%APPDATA%/PowerRangers/save.json`, High Scores hall of fame, character & level select, options. |
+| Audio | 100% | Phase 7 complete: Native Windows MCI MIDI player for Title and Level soundtracks with volume control and mute toggle. |
+| **Estimated total** | 100% | All 7 phases complete. Verified bit-identical logic, pixel-identical rendering, fully playable desktop port. |
+
+---
+
+## How to Run the Game
+
+To launch the game directly from the command line:
+
+```bash
+# Run with default 3x scaling (720x960) and sound:
+dotnet run --project port/PR.Game/PR.Game.csproj
+
+# Run with custom options:
+dotnet run --project port/PR.Game/PR.Game.csproj -- --scale 4 --lang en
+
+# Run directly from user-supplied JAR:
+dotnet run --project port/PR.Game/PR.Game.csproj -- --jar JAR/Power_Rangers_240_nok.jar
+```
+
+### Controls
+- **Move:** Arrow Keys / `W`, `A`, `S`, `D` / Numpad `2`, `4`, `6`, `8` / Gamepad D-pad & Left Stick
+- **Attack / Jump:** `Space` / `Enter` / Numpad `5` / Gamepad `A`
+- **Magic Spell:** `Left Ctrl` / `0` / Numpad `0` / Gamepad `B`
+- **Pause / Menu:** `Escape` / `P` / Gamepad `Start`
+- **Fullscreen Toggle:** `F11`
+
+---
+
+## How to Run Validation Tests
+
+To run the complete automated differential verification suite (traces + frames):
+
+```bash
+# On Windows (PowerShell):
+powershell -File tools/run_tests.ps1
+
+# On Linux/macOS/Git Bash:
+bash tools/run_tests.sh
+```
 
 ---
 

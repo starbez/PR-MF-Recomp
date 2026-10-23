@@ -88,5 +88,41 @@
   - Living Mobile proportional font table, word-wrap line breaking, and umlaut/accent glyph positioning are 100% bit-identical with original engine.
 
 ### 3. What is Still Unknown
-- None for rendering and logic. Ready for Phase 7 (PC frontend, audio, controls, saves).
+- None for rendering and logic.
+
+## Status after Phase 7 (PC Desktop Frontend, Audio, Controls, Saves)
+
+### 1. What is Done
+- Built native desktop frontend `port/PR.Game` (.NET 8 + Raylib-cs 8.1.0):
+  - **Window & Presentation (`GameView.cs`):**
+    - 240x320 software buffer presented via Raylib `Texture2D` with point filtering.
+    - Integer scaling (1x to 5x, default 3x -> 720x960), resizable window with letterbox/pillarbox bars.
+    - Fullscreen toggle with F11 hotkey.
+  - **Audio Engine (`MidiPlayer.cs`):**
+    - Native Windows Multimedia sequencer (`winmm.dll` MCI) for playback of original Type 0 MIDI sequences (`sound_1.mid`, `sound_2.mid`).
+    - Volume control (0..100%), looping, and mute toggling.
+  - **Input Router (`InputRouter.cs`):**
+    - Maps Keyboard and Gamepad to J2ME KeyCodes (-1..-7, 0..9, *, #).
+    - Remappable bindings persisted to `%APPDATA%/PowerRangers/bindings.json`.
+  - **Save & Settings (`SaveManager.cs`):**
+    - Persists settings, unlocked levels, and Top 5 High Scores (Story & Survival) to `%APPDATA%/PowerRangers/save.json`.
+  - **Menu & UI (`MenuSystem.cs`):**
+    - Title screen, Main menu, Ranger character select (Nick, Chip, Madison, Vida, Xander) with stat meters, Level select (1-12), Survival mode, High Scores hall of fame, Options menu (Language, Sound, Volume, Scale, Fullscreen), Controls & help overlay, Pause menu, Game Over, and High Score initials entry.
+  - **CLI Flags (`Program.cs`):**
+    - `--scale N`, `--no-sound`, `--fullscreen`, `--lang <de|en|fr|it>`, `--jar <path>`, `--logs`, `--help`.
+  - **Direct JAR & Folder Loading:**
+    - Loads directly from `JAR/Power_Rangers_240_nok.jar` via `ZipResourceProvider` or `extracted/` folder.
+- Unified Automated Test Suite:
+  - `tools/run_tests.sh` and `tools/run_tests.ps1` execute all trace tests and all frame tests.
+  - Full suite verified: `ALL VALIDATIONS PASSED`.
+
+### 2. What is Verified vs. Inferred
+- **End-to-End Game Playability: [verified]**
+  - Game boots, navigates menus, selects rangers/levels, executes deterministic simulation ticks, renders 100% pixel-identical frames, plays audio, saves/loads settings and high scores, and handles inputs from keyboard and gamepad.
+- **Resource Loading: [verified]**
+  - Confirmed working both from raw user-supplied JAR (`JAR/Power_Rangers_240_nok.jar`) and extracted folder.
+
+### 3. What is Still Unknown
+- None. The PC source port is complete and verified according to all specifications.
+
 

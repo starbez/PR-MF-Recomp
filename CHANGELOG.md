@@ -2,7 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased] - Phase 4 Complete
+## [1.0.0] - Phase 7 Complete (PC Port Finished)
+### Added
+- Native PC frontend desktop application `port/PR.Game` (.NET 8 + Raylib-cs 8.1.0):
+  - Integer scaling (1x to 5x, default 3x -> 720x960), fullscreen toggle (F11), letterboxing/pillarboxing.
+  - Native Windows MCI MIDI audio player (`MidiPlayer`) for Title music (`sound_1.mid`) and Level music (`sound_2.mid`) with volume control, looping, and mute toggle.
+  - Configurable `InputRouter` mapping Keyboard & Gamepad to J2ME key codes, saved to `%APPDATA%/PowerRangers/bindings.json`.
+  - Save manager `SaveManager` with `%APPDATA%/PowerRangers/save.json` persisting options, unlock state, and Top 5 High Scores.
+  - Complete menu system `MenuSystem`: Title screen, Main menu, Ranger character select (Nick, Chip, Madison, Vida, Xander) with stat meters, Level select (1-12), Survival mode, High Scores hall of fame, Options menu, Controls & help overlay, Pause menu, Game Over and High Score initials entry.
+  - Crash handler writing full call stack to `crash.log`.
+  - Comprehensive CLI options: `--scale N`, `--no-sound`, `--fullscreen`, `--lang <xx>`, `--jar <path>`, `--logs`, `--help`.
+- Unified automated test runner `tools/run_tests.sh` and `tools/run_tests.ps1` verifying both traces and frames.
+
+## [0.6.0] - Phase 6 Complete
+### Added
+- Clean-room 240x320 software renderer in `port/PR.Core/Graphics/`:
+  - `Image`: 32-bit ARGB software surface with StbImageSharp / StbImageWriteSharp decoding and encoding.
+  - `Graphics`: Complete MIDP 2.0 graphics engine supporting `Translate`, `SetClip`, `ClipRect`, `FillRect`, `DrawRect`, `DrawLine`, `DrawImage`, `DrawRegion` (all MIDP 0..7 transforms and 90/180/270 angle conventions), and alpha compositing.
+  - `GMIDlet`: Living Mobile resource stream unpacker, font metric atlas loading, proportional bitmap font glyph renderer, word wrapping (`WordWrap`), and multi-layer accent/umlaut drawing.
+- 100% bit-for-bit pixel-identical verification against ground truth reference frames dumped from the original Java engine (76,800/76,800 pixels matching on all 7 reference frames).
+
+## [0.5.0] - Phase 5 Complete
+### Added
+- Literal C# port of simulation logic in `port/PR.Core`:
+  - `JavaRandom`, `DataReader`, `DataWriter`, `Actor`, `TileMap`, `App`, `Game`.
+- Verified 100% bit-identical line-for-line trace validation against original Java bytecode across 4 test scenarios (608 total ticks) with negative controls.
 ### Added
 - Clean-room Java MIDP 2.0 / MMAPI harness in `tools/harness/`:
   - `MIDlet`, `Displayable`, `Display`, `Canvas`, `Font`, `Image`, `Graphics`, `RecordStore`, `Manager`, `Player`, `VolumeControl`, `Controllable`.

@@ -43,14 +43,21 @@
 - [x] Record ground truth traces and verify identical repeated runs.
 - [x] Record reference frames.
 
-## Phase 5: C# Core Logic Port [IN PROGRESS]
-- [ ] Implement `PR.Core` replicating exact logic.
-- [ ] Match traces 100% against Java harness.
+## Phase 5: C# Core Logic Port [DONE]
+- [x] Implement `PR.Core` replicating exact logic.
+- [x] Match traces 100% line-for-line across all 4 scenarios (608 ticks) against original Java bytecode harness.
+- [x] Verified negative controls detect divergence on seed/input deviation.
 
-## Phase 6: Software Renderer & Frame Validation [UPCOMING]
-- [ ] Tilemap, sprite, background, and HUD software rasterizer.
-- [ ] Pixel-identical frame comparison.
+## Phase 6: Software Renderer & Frame Validation [DONE]
+- [x] Clean-room 240x320 software rasterizer in `PR.Core/Graphics/`: `Image`, `Graphics`, `GMIDlet`.
+- [x] Parallax backgrounds, tilemaps, sprite sequences, animation offsets, HUD, word wrapping, accents/umlauts.
+- [x] 100% bit-for-bit pixel-identical verification against all 7 reference frames (76,800/76,800 pixels matching).
 
-## Phase 7: Desktop Frontend & Release [UPCOMING]
-- [ ] Raylib frontend (`PR.Game`).
-- [ ] Audio playback, gamepad/keyboard mapping, RMS save emulation.
+## Phase 7: Desktop Frontend & Release [DONE]
+- [x] Raylib frontend desktop app (`PR.Game`).
+- [x] Integer scaling (1x..5x), fullscreen toggle (F11), letterboxing/pillarboxing.
+- [x] Native Windows MCI MIDI audio player (`MidiPlayer`) playing `sound_1.mid` and `sound_2.mid`.
+- [x] Remappable Keyboard & Gamepad `InputRouter` with `%APPDATA%/PowerRangers/bindings.json`.
+- [x] `SaveManager` with `%APPDATA%/PowerRangers/save.json` persisting settings & High Scores.
+- [x] Full menu system `MenuSystem` (Title, Main Menu, Ranger Select with stats, Level Select 1-12, Survival, High Scores, Options, Controls & Help, Pause, Game Over & Name Entry).
+- [x] Unified automated test suite `tools/run_tests.sh` and `tools/run_tests.ps1` passing with `ALL VALIDATIONS PASSED`.
