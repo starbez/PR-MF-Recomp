@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using PR.Core.Audio;
 
 namespace PR.Game.Audio;
@@ -15,10 +16,15 @@ public sealed class MidiPlayer : IDisposable
     }
 
     private readonly string _tempDir;
-    private string? _currentAlias;
-    private bool _isMuted;
-    private bool _isLooping;
-    private int _volume = 800; // 0..1000
+    private readonly object _lock = new();
+    private readonly Thread _workerThread;
+    private readonly AutoResetEvent _wakeEvent = new(false);
+
+    private volatile bool _isRunning = true;
+    private volatile string? _currentAlias;
+    private volatile bool _isMuted;
+    private volatile bool _isLooping;
+    private volatile int _volume = 800; // 0..1000
 
     public bool IsMuted
     {
@@ -36,9 +42,12 @@ public sealed class MidiPlayer : IDisposable
         set
         {
             _volume = Math.Clamp(value, 0, 1000);
-            if (_currentAlias != null && OperatingSystem.IsWindows())
+            lock (_lock)
             {
-                WinMm.mciSendString($"setaudio {_currentAlias} volume to {_volume}", null, 0, IntPtr.Zero);
+                if (_currentAlias != null && OperatingSystem.IsWindows())
+                {
+                    WinMm.mciSendString($"setaudio {_currentAlias} volume to {_volume}", null, 0, IntPtr.Zero);
+                }
             }
         }
     }
@@ -54,6 +63,14 @@ public sealed class MidiPlayer : IDisposable
         {
             // Ignore
         }
+
+        _workerThread = new Thread(BackgroundLoopWorker)
+        {
+            Name = "MidiPlayer_Worker",
+            IsBackground = true,
+            Priority = ThreadPriority.Normal
+        };
+        _workerThread.Start();
 
         AttachSoundEngine();
     }
@@ -92,21 +109,23 @@ public sealed class MidiPlayer : IDisposable
         {
             try
             {
-                Stop();
-
-                string alias = "pr_bgm_" + DateTime.UtcNow.Ticks;
-                string absPath = Path.GetFullPath(filePath);
-
-                int openResult = WinMm.mciSendString($"open \"{absPath}\" type sequencer alias {alias}", null, 0, IntPtr.Zero);
-                if (openResult == 0)
+                lock (_lock)
                 {
-                    _currentAlias = alias;
-                    _isLooping = loop;
-                    WinMm.mciSendString($"setaudio {alias} volume to {_volume}", null, 0, IntPtr.Zero);
-                    // Windows MCI MIDI sequencer does not support 'repeat' flag; play directly and loop in Update()
-                    string playCmd = $"play {alias} from 0";
-                    WinMm.mciSendString(playCmd, null, 0, IntPtr.Zero);
+                    StopInternal();
+
+                    string alias = "pr_bgm_" + DateTime.UtcNow.Ticks;
+                    string absPath = Path.GetFullPath(filePath);
+
+                    int openResult = WinMm.mciSendString($"open \"{absPath}\" type sequencer alias {alias}", null, 0, IntPtr.Zero);
+                    if (openResult == 0)
+                    {
+                        _currentAlias = alias;
+                        _isLooping = loop;
+                        WinMm.mciSendString($"setaudio {alias} volume to {_volume}", null, 0, IntPtr.Zero);
+                        WinMm.mciSendString($"play {alias} from 0", null, 0, IntPtr.Zero);
+                    }
                 }
+                _wakeEvent.Set();
             }
             catch
             {
@@ -121,7 +140,10 @@ public sealed class MidiPlayer : IDisposable
         try
         {
             string outPath = Path.Combine(_tempDir, $"{nameHint}.mid");
-            File.WriteAllBytes(outPath, midiBytes);
+            if (!File.Exists(outPath))
+            {
+                File.WriteAllBytes(outPath, midiBytes);
+            }
             PlayMidi(outPath, loop);
         }
         catch
@@ -130,27 +152,70 @@ public sealed class MidiPlayer : IDisposable
         }
     }
 
+    /// <summary>
+    /// Per-frame update hook. Main thread does 0 ms work; all status polling and loop rewind
+    /// are offloaded to BackgroundLoopWorker to prevent 60 FPS gameplay stutter.
+    /// </summary>
     public void Update()
     {
-        if (_isLooping && _currentAlias != null && OperatingSystem.IsWindows())
+        // No-op on the main thread: prevents MCI sequencer rewind blocking (which takes ~180ms)
+        // from freezing the render loop.
+    }
+
+    /// <summary>
+    /// Dedicated audio worker thread running loop detection and track rewind in the background.
+    /// </summary>
+    private void BackgroundLoopWorker()
+    {
+        var sb = new StringBuilder(64);
+        while (_isRunning)
         {
-            try
+            string? alias;
+            bool loop;
+            lock (_lock)
             {
-                var sb = new StringBuilder(64);
-                int res = WinMm.mciSendString($"status {_currentAlias} mode", sb, sb.Capacity, IntPtr.Zero);
+                alias = _currentAlias;
+                loop = _isLooping && !_isMuted;
+            }
+
+            if (alias != null && loop && OperatingSystem.IsWindows())
+            {
+                sb.Clear();
+                int res = WinMm.mciSendString($"status {alias} mode", sb, sb.Capacity, IntPtr.Zero);
                 if (res == 0 && sb.ToString().Equals("stopped", StringComparison.OrdinalIgnoreCase))
                 {
-                    WinMm.mciSendString($"play {_currentAlias} from 0", null, 0, IntPtr.Zero);
+                    // Track reached the end! Restart playback on this background worker thread.
+                    // The synchronous mciseq.drv rewind (~180ms) happens here without blocking the game's 60 FPS render thread.
+                    lock (_lock)
+                    {
+                        if (_isLooping && !_isMuted && _currentAlias == alias)
+                        {
+                            WinMm.mciSendString($"play {alias} from 0", null, 0, IntPtr.Zero);
+                        }
+                    }
                 }
+
+                // Poll every 12ms while active to ensure minimal audio gap on track end
+                _wakeEvent.WaitOne(12);
             }
-            catch
+            else
             {
-                // Ignore
+                // Idle when not playing or not looping
+                _wakeEvent.WaitOne(50);
             }
         }
     }
 
     public void Stop()
+    {
+        lock (_lock)
+        {
+            StopInternal();
+        }
+        _wakeEvent.Set();
+    }
+
+    private void StopInternal()
     {
         _isLooping = false;
         if (_currentAlias != null && OperatingSystem.IsWindows())
@@ -173,6 +238,14 @@ public sealed class MidiPlayer : IDisposable
 
     public void Dispose()
     {
+        _isRunning = false;
+        _wakeEvent.Set();
+        if (_workerThread.IsAlive)
+        {
+            _workerThread.Join(200);
+        }
+        _wakeEvent.Dispose();
+
         DetachSoundEngine();
         Stop();
         try

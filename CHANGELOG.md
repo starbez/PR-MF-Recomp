@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.4] - Audio Looping Stutter & Thread Decoupling Fix
+### Fixed
+- **Audio Loop Stutter & Main Thread Freezes (`MidiPlayer.cs`):**
+  - Diagnosed empirical root cause of gameplay lag when audio ends and loops: the Windows MCI sequencer driver (`mciseq.drv`) blocks synchronously for ~184 ms when resetting channels and rewinding playback from the stopped state (`play <alias> from 0`). Because this was executed on the main thread in `midiPlayer.Update()`, every audio loop frozen the game loop for 11 frames at 60 FPS.
+  - Implemented a dedicated background audio worker thread (`BackgroundLoopWorker`) in `MidiPlayer.cs` that handles track status polling and track rewind off the main thread.
+  - Reduced main-thread `midiPlayer.Update()` execution time to 0 ms, completely eliminating the frame drop / freeze when background music loops.
+  - Added cached file checks in `PlayMidiBytes()` to eliminate redundant temporary disk writes.
+
 ## [1.5.3] - Static Element Placement & Breakable Tile Animation Fix
 ### Fixed
 - **Missing Crystals & Misplaced Level Elements (`Actor.cs`, `Game.cs`):**

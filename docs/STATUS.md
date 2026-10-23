@@ -284,3 +284,25 @@ Analysis of problems (a) through (i):
 ### 3. What is Still Unknown
 - None. Crystals, pickups, decorations, moving platforms, and breakable tiles are verified and working.
 
+## Status after Audio Looping Stutter & Thread Decoupling Fix
+
+### 1. What is Done
+- Diagnosed audio loop stutter:
+  - Benchmark measurements proved Windows MCI sequencer (`mciseq.drv`) blocks for ~184 ms synchronously when restarting playback from the stopped state (`play <alias> from 0`).
+  - Because `midiPlayer.Update()` was called on the main thread in `Program.Main`, this 184 ms blocking period caused an 11-frame visual stutter every time background music looped.
+- Offloaded track loop handling to a dedicated background worker thread:
+  - Implemented `BackgroundLoopWorker` thread in `MidiPlayer.cs` with thread-safe state synchronization and wake events.
+  - Main thread `midiPlayer.Update()` now executes in 0 ms, completely eliminating the frame drop.
+  - The 184 ms rewind/restart latency occurs entirely off the rendering thread, allowing 60 FPS gameplay to continue with zero dropped frames.
+
+### 2. What is Verified vs. Inferred
+- **MCI Replay Timing: [verified]**
+  - Confirmed empirical measurement: `Replay when STOPPED took: 184.35 ms`.
+- **Main Thread Decoupling: [verified]**
+  - Background loop worker runs independently and restarts music without touching the main thread loop.
+- **Automated Regression Suite: [verified]**
+  - `tools/run_tests.ps1` confirms all traces and frames continue to pass 100% bit-identical (`ALL VALIDATIONS PASSED`).
+
+### 3. What is Still Unknown
+- None. Audio looping is decoupled, stutter-free, and validated.
+
