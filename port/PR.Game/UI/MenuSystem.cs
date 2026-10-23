@@ -59,8 +59,18 @@ public sealed class MenuSystem
         _selectedCharacter = Math.Clamp(_saveManager.Data.SelectedCharacter, 0, 4);
         _audio.IsMuted = !_saveManager.Data.SoundEnabled;
         _audio.Volume = _saveManager.Data.Volume;
+        PR.Core.EngineTweaks.Smooth60Fps = _saveManager.Data.Smooth60Fps;
+        PR.Core.EngineTweaks.Widescreen = _saveManager.Data.Widescreen;
 
         PlayMenuMusic();
+    }
+
+    public void UpdateInterpolation(float alpha)
+    {
+        if (State == GameState.InGame && ActiveGame != null)
+        {
+            ActiveGame.UpdateInterpolation(alpha);
+        }
     }
 
     private int _audioTestState = 0; // 0=STOPPED, 1=SOUND 1, 2=SOUND 2, 3=STOP
@@ -295,7 +305,7 @@ public sealed class MenuSystem
 
     private void HandleOptionsInput(int key)
     {
-        const int OptionsCount = 6;
+        const int OptionsCount = 7;
         if (key == -1) // UP
         {
             _subIndex = (_subIndex - 1 + OptionsCount) % OptionsCount;
@@ -340,20 +350,26 @@ public sealed class MenuSystem
                     _saveManager.Save();
                     break;
 
-                case 3: // Window Scale
+                case 3: // Frame Rate (Smooth 60 / Original 14)
+                    _saveManager.Data.Smooth60Fps = !_saveManager.Data.Smooth60Fps;
+                    PR.Core.EngineTweaks.Smooth60Fps = _saveManager.Data.Smooth60Fps;
+                    _saveManager.Save();
+                    break;
+
+                case 4: // Window Scale
                     int nextScale = Math.Clamp(_saveManager.Data.Scale + dir, 1, 5);
                     _saveManager.Data.Scale = nextScale;
                     _onScaleChange(nextScale);
                     _saveManager.Save();
                     break;
 
-                case 4: // Fullscreen Toggle
+                case 5: // Fullscreen Toggle
                     _onFullscreenToggle();
                     _saveManager.Data.Fullscreen = !_saveManager.Data.Fullscreen;
                     _saveManager.Save();
                     break;
 
-                case 5: // Test Audio
+                case 6: // Test Audio
                     _audioTestState = (_audioTestState + dir + 4) % 4;
                     if (_audioTestState == 1) PR.Core.Audio.SoundEngine.PlaySoundDirect(1, true);
                     else if (_audioTestState == 2) PR.Core.Audio.SoundEngine.PlaySoundDirect(2, true);
@@ -659,26 +675,27 @@ public sealed class MenuSystem
             $"LANGUAGE: < {curLang} >",
             $"SOUND: < {(_saveManager.Data.SoundEnabled ? "ON" : "OFF")} >",
             $"VOLUME: < {_saveManager.Data.Volume / 10}% >",
+            $"FRAME RATE: < {(_saveManager.Data.Smooth60Fps ? "SMOOTH (60)" : "ORIGINAL (14)")} >",
             $"SCALE: < {_saveManager.Data.Scale}X >",
             $"FULLSCREEN: < {(_saveManager.Data.Fullscreen ? "YES" : "NO")} >",
             $"TEST AUDIO: < {testAudioLabel} >"
         };
 
-        int startY = 48;
+        int startY = 40;
         for (int i = 0; i < items.Length; i++)
         {
             bool sel = i == _subIndex;
             if (sel)
             {
                 gr.SetColor(0x401010);
-                gr.FillRect(10, startY + i * 35 - 3, 220, 24);
+                gr.FillRect(10, startY + i * 32 - 3, 220, 24);
                 gr.SetColor(0xFFD700);
-                gr.DrawRect(10, startY + i * 35 - 3, 219, 23);
-                GMIDlet.a(1, items[i], 120, startY + i * 35, 17);
+                gr.DrawRect(10, startY + i * 32 - 3, 219, 23);
+                GMIDlet.a(1, items[i], 120, startY + i * 32, 17);
             }
             else
             {
-                GMIDlet.a(0, items[i], 120, startY + i * 35, 17);
+                GMIDlet.a(0, items[i], 120, startY + i * 32, 17);
             }
         }
 

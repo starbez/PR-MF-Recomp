@@ -84,6 +84,11 @@ public sealed class Actor
     public int K; // bbox right
     public int L; // bbox bottom
 
+    // Sub-frame interpolation for 60fps rendering (engine tweak)
+    public ActorState InterpState { get; } = new();
+    public int RenderX;
+    public int RenderY;
+
     public Actor()
     {
     }
@@ -242,8 +247,10 @@ public sealed class Actor
             return false;
         }
 
-        int n3 = n + var_int_d;
-        int n4 = n2 + var_int_e;
+        int posX = EngineTweaks.Smooth60Fps ? RenderX : var_int_d;
+        int posY = EngineTweaks.Smooth60Fps ? RenderY : var_int_e;
+        int n3 = n + posX;
+        int n4 = n2 + posY;
         var_int_b = int_a();
         int n5 = 0;
         if (var_byte_arr_arr_a == null || var_int_a >= var_byte_arr_arr_a.Length) return false;
@@ -487,6 +494,9 @@ public sealed class Actor
     {
         var_boolean_f = true;
         var_int_l = 0;
+        InterpState.Snap(var_int_d, var_int_e);
+        RenderX = var_int_d;
+        RenderY = var_int_e;
     }
 
     public void void_i()
@@ -565,6 +575,7 @@ public sealed class Actor
         {
             var_int_d += var_int_f;
             var_int_e += var_int_g;
+            InterpState.Update(var_int_d, var_int_e);
         }
         ++var_int_l;
         if (var_int_k > 0 && var_int_l > var_int_k)

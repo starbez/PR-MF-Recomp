@@ -139,6 +139,10 @@ public static class Program
                     accumulator -= SimStep;
                 }
 
+                // Sub-step alpha for 60fps interpolation: alpha in [0, 1)
+                float alpha = accumulator / SimStep;
+                menuSystem.UpdateInterpolation(alpha);
+
                 // Render Frame
                 menuSystem.Render(gr);
 

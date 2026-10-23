@@ -12,6 +12,8 @@ public sealed class SaveData
     public int Volume { get; set; } = 800; // 0..1000
     public int Scale { get; set; } = 3;
     public bool Fullscreen { get; set; } = false;
+    public bool Smooth60Fps { get; set; } = true; // Default Smooth (60)
+    public bool Widescreen { get; set; } = true;  // Default Widescreen
     public int SelectedCharacter { get; set; } = 0; // 0..4
     public int HighestUnlockedLevel { get; set; } = 1;
 

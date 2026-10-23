@@ -18,8 +18,8 @@ Based on decompilation, bytecode analysis, and literal logic translation validat
 | Audio | 100% | Phase 7 & Task 1 complete: In-memory `/l` MIDI pack extraction, MCI sequencer looping fix, Raylib audio device init, audio logging & debug menu. |
 | **Estimated total** | 100% | All 7 phases complete. Verified bit-identical logic, pixel-identical rendering, fully playable desktop port. |
 | Task 1: Fix missing sound | 100% | DIAGNOSED & FIXED: MCI repeat parameter bug resolved, in-memory loader, verified 0 audio diffs with harness. |
-| Task 2: 60 FPS smooth | In Progress | Original 70ms logic preserved, sub-frame interpolation for camera/actors, snap on teleports. |
-| Task 3: Widescreen | Queued | Aspect-ratio configurable extended view, edge tiling, logic rectangle preserved. |
+| Task 2: 60 FPS smooth | 100% | Original 70ms logic preserved, sub-frame interpolation for camera/actors, snap on teleports, switchable in menu. |
+| Task 3: Widescreen | In Progress | Aspect-ratio configurable extended view, edge tiling, logic rectangle preserved. |
 | Task 4: Better menus | Queued | Modern settings layer, mouse/gamepad nav, Esc pause menu with settings. |
 
 ---

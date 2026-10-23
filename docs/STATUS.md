@@ -138,6 +138,16 @@
 - **Looping & MCI Fix:** Identified root cause of silence: Windows MCI `mciSendString` fails with error 259 when given `repeat` on the MIDI sequencer device. Fixed by using standard `play <alias> from 0` and looping on `stopped` state in `MidiPlayer.Update()`.
 - **Logs & Debug:** Added `--logs` audio mode logging every sound event and byte count, plus Options menu audio test entry and F3 debug key.
 
+## Task 2: 60 FPS Sub-Frame Interpolation
+
+### 1. Implementation
+- **Timing:** Game logic ticks remain at fixed 70 ms (14.28 Hz) step. No physics, combat, or RNG ordering changes.
+- **Interpolation:** Sub-frame alpha fraction calculated each render frame. Position interpolation applied to camera (`ac, ad`), player, enemies, projectiles, and moving platforms.
+- **Snapping:** Instant teleport threshold (>64 px) and spawn state prevent any sliding on spawns, screen transitions, or teleports.
+- **Menu Option:** Added `FRAME RATE: < SMOOTH (60) / ORIGINAL (14) >`, default Smooth (60).
+- **Validation:** Tweak is OFF by default in `PR.Core` and test runners; all 608 ticks and 7 frames pass 100% bit-identical.
+
+
 
 
 

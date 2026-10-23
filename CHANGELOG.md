@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - Upgrades & Fixes: Task 2 (60 FPS Sub-Frame Interpolation)
+### Added
+- Implemented smooth sub-frame interpolation (`EngineTweaks.Smooth60Fps`) for camera and actors:
+  - Game logic ticks remain strictly at original 70 ms step (~14.28 Hz) with 100% deterministic physics, combat, and RNG order.
+  - Sub-frame alpha calculation $\alpha = \text{accumulator} / \text{SimStep}$ applied at 60 FPS presentation rate.
+  - Interpolated coordinates applied to camera (`ac`, `ad`), player actor, enemy actors, projectiles, and moving platforms.
+  - Animation frame indices (`var_int_a`, `x`, sub-rects) stay strictly locked to logic ticks.
+  - Teleport and spawn protection: positions jump/snap instantly when displacement exceeds threshold (>64 px) or when spawned.
+  - Switchable via Options menu: `FRAME RATE: < SMOOTH (60) / ORIGINAL (14) >`, default Smooth (60).
+  - Tweak defaults to OFF in `PR.Core` and automated tests to guarantee 100% bit-for-bit trace and frame verification.
+
 ## [1.1.0] - Upgrades & Fixes: Task 1 (Sound Engine & MCI Playback Fix)
 ### Fixed
 - Fixed audio playback failure on Windows: MCI `mciSendString` command failed with error 259 because `repeat` is not recognized by the Windows MIDI sequencer driver. Replaced with clean `play <alias> from 0` and polling in `MidiPlayer.Update()`.

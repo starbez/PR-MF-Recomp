@@ -250,6 +250,9 @@ public sealed class Game
         {
             ac = var_a_f.var_int_d + V - 20;
             ad = var_a_f.var_int_e + W - 20;
+            CamInterpState.Snap(ac, ad);
+            RenderCamX = ac;
+            RenderCamY = ad;
         }
         O = 0;
         P = 0;
@@ -272,14 +275,77 @@ public sealed class Game
     private string? var_java_lang_String_b_hud;
     private int aL = -1;
 
+    // Camera sub-frame interpolation for 60fps (engine tweak)
+    public ActorState CamInterpState { get; } = new();
+    public int RenderCamX;
+    public int RenderCamY;
+
+    public void UpdateInterpolation(float alpha)
+    {
+        if (!EngineTweaks.Smooth60Fps) return;
+
+        var (cx, cy) = CamInterpState.GetInterpolated(alpha);
+        RenderCamX = cx;
+        RenderCamY = cy;
+
+        if (var_a_f != null)
+        {
+            var (px, py) = var_a_f.InterpState.GetInterpolated(alpha);
+            var_a_f.RenderX = px;
+            var_a_f.RenderY = py;
+        }
+
+        if (var_a_arr_g != null)
+        {
+            foreach (var enemy in var_a_arr_g)
+            {
+                if (enemy != null && enemy.var_boolean_a)
+                {
+                    var (ex, ey) = enemy.InterpState.GetInterpolated(alpha);
+                    enemy.RenderX = ex;
+                    enemy.RenderY = ey;
+                }
+            }
+        }
+
+        if (var_a_arr_b != null)
+        {
+            for (int i = 0; i < M; i++)
+            {
+                var proj = var_a_arr_b[i];
+                if (proj != null && proj.var_boolean_a)
+                {
+                    var (bx, by) = proj.InterpState.GetInterpolated(alpha);
+                    proj.RenderX = bx;
+                    proj.RenderY = by;
+                }
+            }
+        }
+
+        if (var_a_arr_a != null)
+        {
+            foreach (var plat in var_a_arr_a)
+            {
+                if (plat != null && plat.var_boolean_a)
+                {
+                    var (lx, ly) = plat.InterpState.GetInterpolated(alpha);
+                    plat.RenderX = lx;
+                    plat.RenderY = ly;
+                }
+            }
+        }
+    }
+
     public void d()
     {
         if (var_boolean_l || var_a_f == null) return;
         var gr = GMIDlet.var_javax_microedition_lcdui_Graphics_a;
         if (gr == null) return;
 
-        int n4 = ac - (var_int_c >> 1);
-        int n5 = ad - (var_int_d >> 1);
+        int camX = EngineTweaks.Smooth60Fps ? RenderCamX : ac;
+        int camY = EngineTweaks.Smooth60Fps ? RenderCamY : ad;
+        int n4 = camX - (var_int_c >> 1);
+        int n5 = camY - (var_int_d >> 1);
 
         gr.Translate(-gr.GetTranslateX(), -gr.GetTranslateY() + var_int_b);
 
@@ -1322,6 +1388,8 @@ public sealed class Game
                 if (ad < af) ad = af;
                 else if (ad > ah) ad = ah;
             }
+
+            CamInterpState.Update(ac, ad);
 
             for (int i = 0; i < ai; ++i)
             {
