@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - Upgrades & Fixes: Task 1 (Sound Engine & MCI Playback Fix)
+### Fixed
+- Fixed audio playback failure on Windows: MCI `mciSendString` command failed with error 259 because `repeat` is not recognized by the Windows MIDI sequencer driver. Replaced with clean `play <alias> from 0` and polling in `MidiPlayer.Update()`.
+- Implemented in-engine Living Mobile audio pack extractor in `SoundEngine.Load(dis)` inside `App.cs:m()`, loading MIDI blobs directly from memory (`/l`) at runtime from user JAR without requiring extracted files on disk.
+- Connected audio trigger hooks in `PR.Core`:
+  - Hooked `SoundEngine.Play(1)` at tick 2 in `Game.boolean_b()` (matching `f.java:908`).
+  - Hooked `SoundEngine.Play(2)` on stage victory and `SoundEngine.Play(3)` on defeat in `Game.a()` (matching `f.java:2038-2043`).
+  - Hooked `SoundEngine.Stop()` in `Game.e()`.
+- Initialized Raylib audio device via `Raylib.InitAudioDevice()`, ensured volume scaling is active, and verified sound defaults to ON.
+- Added `--logs` audio mode logging every sound event, byte size, MIME type, and stop event.
+- Added Audio Test option in Options menu and F3 debug key to cycle and test sound playback by ID.
+
 ## [1.0.0] - Phase 7 Complete (PC Port Finished)
 ### Added
 - Native PC frontend desktop application `port/PR.Game` (.NET 8 + Raylib-cs 8.1.0):

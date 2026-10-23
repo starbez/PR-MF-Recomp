@@ -15,8 +15,12 @@ Based on decompilation, bytecode analysis, and literal logic translation validat
 | Rendering | 100% | Phase 6 complete: Software renderer verified 100% pixel-identical (76,800/76,800 pixels) across all 7 reference frames. |
 | Window, scaling, input | 100% | Phase 7 complete: Raylib desktop window, integer scaling (1x..5x), fullscreen (F11), remappable Keyboard & Gamepad `InputRouter`. |
 | Menus, hi-scores, saving | 100% | Phase 7 complete: `%APPDATA%/PowerRangers/save.json`, High Scores hall of fame, character & level select, options. |
-| Audio | 100% | Phase 7 complete: Native Windows MCI MIDI player for Title and Level soundtracks with volume control and mute toggle. |
+| Audio | 100% | Phase 7 & Task 1 complete: In-memory `/l` MIDI pack extraction, MCI sequencer looping fix, Raylib audio device init, audio logging & debug menu. |
 | **Estimated total** | 100% | All 7 phases complete. Verified bit-identical logic, pixel-identical rendering, fully playable desktop port. |
+| Task 1: Fix missing sound | 100% | DIAGNOSED & FIXED: MCI repeat parameter bug resolved, in-memory loader, verified 0 audio diffs with harness. |
+| Task 2: 60 FPS smooth | In Progress | Original 70ms logic preserved, sub-frame interpolation for camera/actors, snap on teleports. |
+| Task 3: Widescreen | Queued | Aspect-ratio configurable extended view, edge tiling, logic rectangle preserved. |
+| Task 4: Better menus | Queued | Modern settings layer, mouse/gamepad nav, Esc pause menu with settings. |
 
 ---
 

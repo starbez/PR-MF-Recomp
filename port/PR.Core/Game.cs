@@ -573,6 +573,7 @@ public sealed class Game
 
     public void e()
     {
+        PR.Core.Audio.SoundEngine.Stop();
         var_f_a = this;
         var_g_a.serviceRepaints();
 
@@ -985,6 +986,7 @@ public sealed class Game
             var_boolean_m = false;
             var_g_a.a(null);
             var_g_a.serviceRepaints();
+            PR.Core.Audio.SoundEngine.Play(1, var_int_a);
             if (S >= 0)
             {
                 a(S, 0, 0);
@@ -2280,6 +2282,15 @@ public sealed class Game
     {
         if (scriptIdx >= 0 && scriptIdx < var_short_arr_arr_a.Length)
         {
+            if (scriptIdx == T)
+            {
+                PR.Core.Audio.SoundEngine.Play(2, var_int_a);
+            }
+            else if (scriptIdx == U)
+            {
+                PR.Core.Audio.SoundEngine.Play(3, var_int_a);
+            }
+
             if (!a(var_short_arr_arr_a[scriptIdx]))
             {
                 short[] seq = var_short_arr_arr_a[scriptIdx];

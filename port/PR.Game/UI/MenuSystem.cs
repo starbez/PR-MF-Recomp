@@ -63,21 +63,27 @@ public sealed class MenuSystem
         PlayMenuMusic();
     }
 
+    private int _audioTestState = 0; // 0=STOPPED, 1=SOUND 1, 2=SOUND 2, 3=STOP
+
     private void PlayMenuMusic()
     {
-        string midPath = Path.Combine("sons", "sound_1.mid");
-        if (File.Exists(midPath))
-        {
-            _audio.PlayMidi(midPath, true);
-        }
+        PR.Core.Audio.SoundEngine.Play(0);
     }
 
     private void PlayGameMusic()
     {
-        string midPath = Path.Combine("sons", "sound_2.mid");
-        if (File.Exists(midPath))
+        PR.Core.Audio.SoundEngine.Play(1);
+    }
+
+    public void HandleDebugF3()
+    {
+        _audioTestState = (_audioTestState + 1) % 3 + 1; // Cycle 1 -> 2 -> 3
+        if (_audioTestState == 1) PR.Core.Audio.SoundEngine.PlaySoundDirect(1, true);
+        else if (_audioTestState == 2) PR.Core.Audio.SoundEngine.PlaySoundDirect(2, true);
+        else
         {
-            _audio.PlayMidi(midPath, true);
+            _audioTestState = 0;
+            PR.Core.Audio.SoundEngine.Stop();
         }
     }
 
@@ -289,7 +295,7 @@ public sealed class MenuSystem
 
     private void HandleOptionsInput(int key)
     {
-        const int OptionsCount = 5;
+        const int OptionsCount = 6;
         if (key == -1) // UP
         {
             _subIndex = (_subIndex - 1 + OptionsCount) % OptionsCount;
@@ -314,6 +320,11 @@ public sealed class MenuSystem
                 case 1: // Sound Toggle
                     _saveManager.Data.SoundEnabled = !_saveManager.Data.SoundEnabled;
                     _audio.IsMuted = !_saveManager.Data.SoundEnabled;
+                    PR.Core.Audio.SoundEngine.Enabled = _saveManager.Data.SoundEnabled;
+                    if (Raylib_cs.Raylib.IsAudioDeviceReady())
+                    {
+                        Raylib_cs.Raylib.SetMasterVolume(_saveManager.Data.SoundEnabled ? _saveManager.Data.Volume / 1000f : 0f);
+                    }
                     if (_saveManager.Data.SoundEnabled) PlayMenuMusic();
                     else _audio.Stop();
                     _saveManager.Save();
@@ -322,6 +333,10 @@ public sealed class MenuSystem
                 case 2: // Volume
                     _saveManager.Data.Volume = Math.Clamp(_saveManager.Data.Volume + dir * 100, 0, 1000);
                     _audio.Volume = _saveManager.Data.Volume;
+                    if (Raylib_cs.Raylib.IsAudioDeviceReady() && _saveManager.Data.SoundEnabled)
+                    {
+                        Raylib_cs.Raylib.SetMasterVolume(_saveManager.Data.Volume / 1000f);
+                    }
                     _saveManager.Save();
                     break;
 
@@ -336,6 +351,13 @@ public sealed class MenuSystem
                     _onFullscreenToggle();
                     _saveManager.Data.Fullscreen = !_saveManager.Data.Fullscreen;
                     _saveManager.Save();
+                    break;
+
+                case 5: // Test Audio
+                    _audioTestState = (_audioTestState + dir + 4) % 4;
+                    if (_audioTestState == 1) PR.Core.Audio.SoundEngine.PlaySoundDirect(1, true);
+                    else if (_audioTestState == 2) PR.Core.Audio.SoundEngine.PlaySoundDirect(2, true);
+                    else PR.Core.Audio.SoundEngine.Stop();
                     break;
             }
         }
@@ -626,29 +648,37 @@ public sealed class MenuSystem
         string[] langNames = { "DEUTSCH", "ENGLISH", "FRANCAIS", "ITALIANO" };
         string curLang = langNames[Math.Clamp(_saveManager.Data.LanguageIndex, 0, 3)];
 
+        string testAudioLabel = _audioTestState switch
+        {
+            1 => "PLAY SOUND 1",
+            2 => "PLAY SOUND 2",
+            _ => "IDLE / STOP"
+        };
+
         string[] items = {
             $"LANGUAGE: < {curLang} >",
             $"SOUND: < {(_saveManager.Data.SoundEnabled ? "ON" : "OFF")} >",
             $"VOLUME: < {_saveManager.Data.Volume / 10}% >",
             $"SCALE: < {_saveManager.Data.Scale}X >",
-            $"FULLSCREEN: < {(_saveManager.Data.Fullscreen ? "YES" : "NO")} >"
+            $"FULLSCREEN: < {(_saveManager.Data.Fullscreen ? "YES" : "NO")} >",
+            $"TEST AUDIO: < {testAudioLabel} >"
         };
 
-        int startY = 60;
+        int startY = 48;
         for (int i = 0; i < items.Length; i++)
         {
             bool sel = i == _subIndex;
             if (sel)
             {
                 gr.SetColor(0x401010);
-                gr.FillRect(10, startY + i * 38 - 3, 220, 24);
+                gr.FillRect(10, startY + i * 35 - 3, 220, 24);
                 gr.SetColor(0xFFD700);
-                gr.DrawRect(10, startY + i * 38 - 3, 219, 23);
-                GMIDlet.a(1, items[i], 120, startY + i * 38, 17);
+                gr.DrawRect(10, startY + i * 35 - 3, 219, 23);
+                GMIDlet.a(1, items[i], 120, startY + i * 35, 17);
             }
             else
             {
-                GMIDlet.a(0, items[i], 120, startY + i * 38, 17);
+                GMIDlet.a(0, items[i], 120, startY + i * 35, 17);
             }
         }
 

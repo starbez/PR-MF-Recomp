@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using PR.Core.Audio;
 
 namespace PR.Game.Audio;
 
@@ -16,6 +17,7 @@ public sealed class MidiPlayer : IDisposable
     private readonly string _tempDir;
     private string? _currentAlias;
     private bool _isMuted;
+    private bool _isLooping;
     private int _volume = 800; // 0..1000
 
     public bool IsMuted
@@ -52,6 +54,33 @@ public sealed class MidiPlayer : IDisposable
         {
             // Ignore
         }
+
+        AttachSoundEngine();
+    }
+
+    public void AttachSoundEngine()
+    {
+        SoundEngine.OnPlaySound += HandleSoundPlay;
+        SoundEngine.OnStopSound += HandleSoundStop;
+    }
+
+    public void DetachSoundEngine()
+    {
+        SoundEngine.OnPlaySound -= HandleSoundPlay;
+        SoundEngine.OnStopSound -= HandleSoundStop;
+    }
+
+    private void HandleSoundPlay(int soundId, int loopCount)
+    {
+        if (SoundEngine.Tracks.TryGetValue(soundId, out var track))
+        {
+            PlayMidiBytes(track.Data, $"sound_{soundId}", loopCount == -1);
+        }
+    }
+
+    private void HandleSoundStop()
+    {
+        Stop();
     }
 
     public void PlayMidi(string filePath, bool loop = true)
@@ -72,8 +101,10 @@ public sealed class MidiPlayer : IDisposable
                 if (openResult == 0)
                 {
                     _currentAlias = alias;
+                    _isLooping = loop;
                     WinMm.mciSendString($"setaudio {alias} volume to {_volume}", null, 0, IntPtr.Zero);
-                    string playCmd = $"play {alias} from 0" + (loop ? " repeat" : "");
+                    // Windows MCI MIDI sequencer does not support 'repeat' flag; play directly and loop in Update()
+                    string playCmd = $"play {alias} from 0";
                     WinMm.mciSendString(playCmd, null, 0, IntPtr.Zero);
                 }
             }
@@ -99,8 +130,29 @@ public sealed class MidiPlayer : IDisposable
         }
     }
 
+    public void Update()
+    {
+        if (_isLooping && _currentAlias != null && OperatingSystem.IsWindows())
+        {
+            try
+            {
+                var sb = new StringBuilder(64);
+                int res = WinMm.mciSendString($"status {_currentAlias} mode", sb, sb.Capacity, IntPtr.Zero);
+                if (res == 0 && sb.ToString().Equals("stopped", StringComparison.OrdinalIgnoreCase))
+                {
+                    WinMm.mciSendString($"play {_currentAlias} from 0", null, 0, IntPtr.Zero);
+                }
+            }
+            catch
+            {
+                // Ignore
+            }
+        }
+    }
+
     public void Stop()
     {
+        _isLooping = false;
         if (_currentAlias != null && OperatingSystem.IsWindows())
         {
             try
@@ -121,6 +173,7 @@ public sealed class MidiPlayer : IDisposable
 
     public void Dispose()
     {
+        DetachSoundEngine();
         Stop();
         try
         {

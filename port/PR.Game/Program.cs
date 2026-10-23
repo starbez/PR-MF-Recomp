@@ -41,6 +41,7 @@ public static class Program
         if (cliLogs)
         {
             Console.WriteLine("[Init] Verbose logging enabled.");
+            PR.Core.Audio.SoundEngine.AudioLogging = true;
         }
 
         try
@@ -70,9 +71,18 @@ public static class Program
             app.m();
 
             // 4. Initialize Window and Audio
+            Raylib.InitAudioDevice();
+            if (Raylib.IsAudioDeviceReady())
+            {
+                float masterVol = saveManager.Data.SoundEnabled ? (saveManager.Data.Volume / 1000f) : 0f;
+                Raylib.SetMasterVolume(masterVol);
+                if (cliLogs) Console.WriteLine($"[Audio] Raylib audio device initialized successfully. Volume: {masterVol:F2}");
+            }
+
             using var midiPlayer = new MidiPlayer();
             midiPlayer.IsMuted = !saveManager.Data.SoundEnabled;
             midiPlayer.Volume = saveManager.Data.Volume;
+            PR.Core.Audio.SoundEngine.Enabled = saveManager.Data.SoundEnabled;
 
             using var view = new GameView(saveManager.Data.Scale, saveManager.Data.Fullscreen);
             var inputRouter = new InputRouter();
@@ -110,6 +120,12 @@ public static class Program
                     saveManager.Save();
                 }
 
+                // F3 Audio Debug shortcut
+                if (Raylib.IsKeyPressed(KeyboardKey.F3))
+                {
+                    menuSystem.HandleDebugF3();
+                }
+
                 // Process Input
                 inputRouter.Update(
                     onKeyDown: key => menuSystem.OnKeyDown(key),
@@ -129,6 +145,14 @@ public static class Program
                 // Transfer to Raylib Texture & Present
                 view.UpdateFromCanvas(screen);
                 view.Render();
+
+                // Audio Looping & State
+                midiPlayer.Update();
+            }
+
+            if (Raylib.IsAudioDeviceReady())
+            {
+                Raylib.CloseAudioDevice();
             }
 
             return 0;

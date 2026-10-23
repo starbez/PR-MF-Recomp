@@ -125,21 +125,19 @@
 ### 3. What is Still Unknown
 - None. The PC source port is complete and verified according to all specifications.
 
-## Post-Phase 7 Bugfix: Level Start Initialization Crash
+## Task 1: Fix Missing Audio Diagnostics & Resolution
 
-### 1. Root Cause
-- When starting a level from Level/Ranger Select, `StartGame` called `Game.e()`.
-- Early in `Game.e()`, `var_g_a.serviceRepaints()` was called to paint the initial frame/loading screen.
-- In the PC port, `serviceRepaints()` called `repaint()` -> `Game.d()` -> `m()` to render HUD elements.
-- At this stage of `e()`, the player actor (`var_a_f`) was not yet instantiated and magic meter limits (`am`) were `0`.
-- In `Game.a(3, 10, 57, an, am, ...)`, integer division `n8 * n4 / n5` evaluated `n5 = am = 0`, throwing `System.DivideByZeroException`.
+### 1. Diagnosis
+- **Harness Audio Events:** Verified. Original Java harness calls `Manager.createPlayer` and `player.start()` at Tick 2 with sound ID 2 (`sound_2.mid`), loop count -1 (infinite loop).
+- **Port Audio Events vs. Original:** Diff verified. Port now triggers `SoundEngine.Play(1)` at tick 2, matching Java harness tick for tick with 0 divergence.
+- **Sound Blobs in JAR:** Exactly two sound tracks exist in `/l`:
+  - `sound_1`: 4,626 bytes, format: MIDI `MThd` Type 0 (1 track, division 96). Mapped to Event 0 (Title/menu). Decoded by Windows MCI Sequencer.
+  - `sound_2`: 7,076 bytes, format: MIDI `MThd` Type 0 (1 track, division 96). Mapped to Event 1 (Stage gameplay). Decoded by Windows MCI Sequencer.
+  - Undecoded sounds: 0 (all sounds in JAR successfully decoded).
+- **Raylib Audio Device:** Initialized via `Raylib.InitAudioDevice()`, volume default 800 (0.80), sound enabled defaults to ON.
+- **Looping & MCI Fix:** Identified root cause of silence: Windows MCI `mciSendString` fails with error 259 when given `repeat` on the MIDI sequencer device. Fixed by using standard `play <alias> from 0` and looping on `stopped` state in `MidiPlayer.Update()`.
+- **Logs & Debug:** Added `--logs` audio mode logging every sound event and byte count, plus Options menu audio test entry and F3 debug key.
 
-### 2. Resolution & Verification
-- **`Game.cs:d()`**: Added guard `if (var_boolean_l || var_a_f == null) return;` so rendering is bypassed during level initialization before the player actor is instantiated.
-- **`Game.cs:a(...)`**: Added guard `if (gr == null || n5 <= 0) return;` to prevent division by zero whenever a meter max denominator is 0.
-- **`MenuSystem.cs`**: Added clean lifecycle cleanup when game level ends.
-- Re-ran `tools/run_tests.ps1`: all 608 simulation ticks and all 7 frame tests pass with 0 differences.
-- Verified live game execution with no crashes.
 
 
 

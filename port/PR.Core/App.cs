@@ -211,6 +211,9 @@ public sealed class App
             }
             dis.ReadByte();
 
+            // Load Living Mobile sound tracks
+            PR.Core.Audio.SoundEngine.Load(dis);
+
             Actor.ResourceProvider = ResourceProvider;
             Actor.c(actorImgCount);
         }
