@@ -136,6 +136,30 @@ public sealed class Graphics
         }
     }
 
+    public void ClearRect(int x, int y, int width, int height)
+    {
+        if (width <= 0 || height <= 0) return;
+
+        int devX = _transX + x;
+        int devY = _transY + y;
+
+        int x1 = Math.Max(_clipX, devX);
+        int y1 = Math.Max(_clipY, devY);
+        int x2 = Math.Min(_clipX + _clipW, devX + width);
+        int y2 = Math.Min(_clipY + _clipH, devY + height);
+
+        if (x1 >= x2 || y1 >= y2) return;
+
+        int tWidth = _target.Width;
+        uint[] pixels = _target.Pixels;
+
+        for (int py = y1; py < y2; py++)
+        {
+            int row = py * tWidth;
+            Array.Clear(pixels, row + x1, x2 - x1);
+        }
+    }
+
     public void DrawRect(int x, int y, int width, int height)
     {
         if (width <= 0 || height <= 0) return;

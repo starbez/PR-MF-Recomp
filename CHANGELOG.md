@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.3] - Static Element Placement & Breakable Tile Animation Fix
+### Fixed
+- **Missing Crystals & Misplaced Level Elements (`Actor.cs`, `Game.cs`):**
+  - Resolved root cause of static actors (crystals, pickups, triggers in `var_a_arr_e`, breakable objects in `var_a_arr_d`, decorations in `var_a_arr_a`, shooters in `var_a_arr_i`) rendering at (0, 0): level loading calls `void_h()` before `void_k()`, snapping `RenderX` and `RenderY` to (0, 0) before `void_k()` assigned the spawn coordinates `p, q`.
+  - Added explicit `InterpState.Snap(var_int_d, var_int_e)` and `RenderX/Y` updates in `Actor.void_k()` and `Actor.void_a(other)`.
+  - Introduced `Actor.Interpolates`: only dynamically moving entities (player, enemies, projectiles, moving platforms) interpolate in Smooth 60 FPS mode, while static actors unconditionally render at their exact level coordinates `(var_int_d, var_int_e)`.
+  - Corrected moving platform interpolation in `Game.UpdateInterpolation()` and `Game.k()` (switched iteration from `var_a_arr_a` decorations to `var_a_arr_h` moving platforms).
+- **Breakable Ground Texture Animation (`TileMap.cs`, `Graphics.cs`):**
+  - Resolved root cause of breakable ground not breaking visually: `TileMap.a(tx, ty, tileId)` modified the in-memory tile grid but omitted `void_d(tx, ty)` (which redrew the tile into the offscreen tile buffer via `c(tx, ty)`).
+  - Added `TileMap.void_d(tx, ty)` to immediately redraw modified tiles within the active viewport.
+  - Implemented `Graphics.ClearRect` and cleared the 16x16 tile slot in `TileMap.c(n, n2)` prior to drawing, ensuring crumbling rock frames render without ghosting and broken air tiles (`tileId = 0`) become completely transparent so holes appear cleanly.
+
 ## [1.5.2] - In-Game Language Alignment & English Default
 ### Fixed
 - **Language Array Index Alignment (`App.cs`, `MenuSystem.cs`, `SaveData.cs`):**

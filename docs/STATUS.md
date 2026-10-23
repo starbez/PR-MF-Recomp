@@ -263,3 +263,24 @@ Analysis of problems (a) through (i):
 ### 3. What is Still Unknown
 - None. Game is in English, verified bit-identical in tests, and options menu language switching works seamlessly.
 
+## Status after Static Element Placement & Breakable Tile Animation Fix
+
+### 1. What is Done
+- Diagnosed crystal visibility & placement:
+  - Level loaders call `void_h()` before `void_k()`. `void_h()` snapped `InterpState` to `(0, 0)` before `void_k()` assigned the spawn coordinates `p, q`.
+  - Added `InterpState.Snap(var_int_d, var_int_e)` and `RenderX/Y` updates in `void_k()` and `void_a()`.
+  - Added `Interpolates` boolean flag on `Actor`: only moving entities interpolate, while static actors unconditionally render at `(var_int_d, var_int_e)`.
+  - Fixed moving platform interpolation in `Game.cs` (switched from `var_a_arr_a` decorations to `var_a_arr_h` moving platforms).
+- Diagnosed breakable ground animation:
+  - `TileMap.a(tx, ty, tileId)` modified the tile array but omitted `void_d(tx, ty)`.
+  - Added `void_d(tx, ty)` and `Graphics.ClearRect` so modified tiles redraw on screen immediately, crumbling textures render cleanly, and broken air tiles become transparent.
+
+### 2. What is Verified vs. Inferred
+- **Level Element Coordinates: [verified]**
+  - Verified all crystals, pickups, and breakable objects across Level 1, 2, and 3 now have identical `(var_int_d, var_int_e)` and `(RenderX, RenderY)` coordinates matching level files.
+- **Automated Regression Suite: [verified]**
+  - Running `tools/run_tests.ps1` confirms all 608 simulation ticks and 7 reference frames continue to pass 100% bit-identical (`ALL VALIDATIONS PASSED`).
+
+### 3. What is Still Unknown
+- None. Crystals, pickups, decorations, moving platforms, and breakable tiles are verified and working.
+

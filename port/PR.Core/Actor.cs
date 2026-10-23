@@ -88,6 +88,7 @@ public sealed class Actor
     public ActorState InterpState { get; } = new();
     public int RenderX;
     public int RenderY;
+    public bool Interpolates = false;
 
     public Actor()
     {
@@ -247,8 +248,8 @@ public sealed class Actor
             return false;
         }
 
-        int posX = (EngineTweaks.Smooth60Fps && InterpState.Initialized) ? RenderX : var_int_d;
-        int posY = (EngineTweaks.Smooth60Fps && InterpState.Initialized) ? RenderY : var_int_e;
+        int posX = (EngineTweaks.Smooth60Fps && Interpolates && InterpState.Initialized) ? RenderX : var_int_d;
+        int posY = (EngineTweaks.Smooth60Fps && Interpolates && InterpState.Initialized) ? RenderY : var_int_e;
         int n3 = n + posX;
         int n4 = n2 + posY;
         var_int_b = int_a();
@@ -730,6 +731,9 @@ public sealed class Actor
         var_int_c = -1;
         var_int_b = int_a();
         v = 5;
+        InterpState.Snap(var_int_d, var_int_e);
+        RenderX = var_int_d;
+        RenderY = var_int_e;
     }
 
     public int int_b()
@@ -850,6 +854,9 @@ public sealed class Actor
         u = other.u;
         var_byte_b = other.var_byte_b;
         var_byte_d = other.var_byte_d;
+        InterpState.Snap(var_int_d, var_int_e);
+        RenderX = var_int_d;
+        RenderY = var_int_e;
 
         if (var_a_arr_a != null && s >= 0 && s < var_a_arr_a.Length)
         {

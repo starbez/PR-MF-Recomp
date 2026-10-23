@@ -298,8 +298,13 @@ public sealed class TileMap
 
         int n5 = int_a(n - u + w, y) << var_int_a;
         int n6 = int_a(n2 - v + x, z) << var_int_a;
-        int n7 = n3 - 1;
+        if (var_boolean_a && var_javax_microedition_lcdui_Graphics_a != null)
+        {
+            var_javax_microedition_lcdui_Graphics_a.SetClip(n5, n6, var_int_b, var_int_b);
+            var_javax_microedition_lcdui_Graphics_a.ClearRect(n5, n6, var_int_b, var_int_b);
+        }
         if (n3 == 0) return;
+        int n7 = n3 - 1;
         if (n3 > 2 && var_int_arr_b != null && n3 - 3 < var_int_arr_b.Length)
         {
             n7 = var_int_arr_b[n3 - 3] + 2;
@@ -364,6 +369,15 @@ public sealed class TileMap
         }
         if (tx < A || tx >= A + C || var_byte_arr_b == null) return;
         var_byte_arr_b[F + tx - A] = tileId;
+        void_d(tx, ty);
+    }
+
+    private void void_d(int n, int n2)
+    {
+        if (n >= u && n < u + y && n2 >= v && n2 < v + z)
+        {
+            c(n, n2);
+        }
     }
 
     private int int_b(int tx, int ty)

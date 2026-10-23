@@ -202,6 +202,7 @@ public sealed class Game
     {
         if (var_a_a == null) throw new InvalidOperationException("var_a_a not initialized.");
         Actor proj = new Actor(var_a_a);
+        proj.Interpolates = true;
         proj.E = animIndex;
         parent.var_a_a = proj;
         proj.var_a_b = parent;
@@ -325,9 +326,9 @@ public sealed class Game
             }
         }
 
-        if (var_a_arr_a != null)
+        if (var_a_arr_h != null)
         {
-            foreach (var plat in var_a_arr_a)
+            foreach (var plat in var_a_arr_h)
             {
                 if (plat != null && plat.var_boolean_a)
                 {
@@ -725,6 +726,7 @@ public sealed class Game
             dis.ReadShort();
 
             var_a_f = a_a(dis);
+            var_a_f.Interpolates = true;
             var_a_f.w = F;
             var_a_f.d(F);
             var_a_f.t = 0;
@@ -764,6 +766,7 @@ public sealed class Game
                     for (int i = 0; i < var_a_arr_g.Length; ++i)
                     {
                         Actor a2 = App.a_a(var_byte_arr_b[i]);
+                        a2.Interpolates = true;
                         c(a2);
                         a2.var_boolean_k = false;
                         a2.d(-1);
@@ -902,6 +905,7 @@ public sealed class Game
         for (int i = 0; i < enemyCount; ++i)
         {
             Actor a2 = a_a(dis);
+            a2.Interpolates = true;
             var_a_arr_g[i] = a2;
             a2.z += var_byte_a;
             a2.A += var_byte_a;
@@ -947,6 +951,7 @@ public sealed class Game
             sbyte spd = dis.ReadByte();
             dis.ReadShort();
             Actor a3 = new Actor();
+            a3.Interpolates = true;
             a3.a(dis, true);
             a3.void_g();
             a3.void_h();
@@ -1453,11 +1458,11 @@ public sealed class Game
                 }
             }
 
-            if (var_a_arr_a != null)
+            if (var_a_arr_h != null)
             {
-                for (int i = 0; i < var_a_arr_a.Length; i++)
+                for (int i = 0; i < var_a_arr_h.Length; i++)
                 {
-                    var plat = var_a_arr_a[i];
+                    var plat = var_a_arr_h[i];
                     if (plat != null && plat.var_boolean_a)
                     {
                         plat.InterpState.Update(plat.var_int_d, plat.var_int_e);
