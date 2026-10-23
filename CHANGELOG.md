@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.5] - Authentic J2ME Living Mobile Menu Remake
+### Added
+- **Authentic Living Mobile Menu Presentation & Art Assets (`MenuSystem.cs`):**
+  - Reconstructed the complete menu visual presentation using the original Living Mobile J2ME game assets loaded from the JAR:
+    - **Tiled Background Wallpaper:** Tiles `Image[28]` (32x32 dark textured crimson wallpaper pattern tile) across the entire virtual buffer in both 4:3 (240x320) and 16:9 widescreen viewports with zero black bars.
+    - **Ornamental Frame & Borders:** Integrates authentic top ornamental border `Image[6]` (240x16), bottom softkey bar frame `Image[7]` (240x25), left vertical column `Image[9]` (9x16), and right vertical column `Image[8]` (9x16).
+    - **Header Shield Emblem:** Renders the authentic Power Rangers golden mystic shield emblem `Image[10]` (93x106) across Main Menu, High Scores, Name Entry, and Game Over screens.
+    - **Ranger Art Watermark:** Displays the authentic character artwork emblem `Image[27]` (107x172) in the bottom-right corner as seen in the original `g.b()` routine.
+    - **Signature Dividing Lines:** Implemented `DrawDivider` matching original `g.d(int y)` dual-white and signature dark hairline styling.
+    - **Authentic Arrow Sprites:** Uses `Image[3]` (12x12 Living Mobile arrow sprite sheet) for left/right selectors instead of text characters.
+  - **Authentic Title Screen (`RenderTitleScreen`):**
+    - Pitch-black backdrop with centered 240x210 Ranger illustration (`Image[1]`), top "Power Rangers" lightning logo (`Image[0]`), and "Mystic Force" subtitle banner (`Image[5]`).
+    - Blinking "PRESS ANY KEY TO START" in Font 0 and authentic copyright notice.
+    - Softkey bar with "MENU" (left) and "EXIT" (right).
+  - **Authentic Main Menu (`RenderMainMenu`):**
+    - Golden mystic shield header, crimson selection box with gold outline and arrow indicators, Font 3 gold highlight for selected items, and Font 1 white text for unselected options.
+  - **Enhanced Character Select (`RenderCharacterSelect`):**
+    - Dynamic localized character descriptions from `App.var_java_lang_String_arr_arr_a[0]`, animated Ranger sprite preview (`preview.void_j()`), and gold-framed stat bars for Health, Magic, and Speed.
+  - **Authentic Level Select (`RenderLevelSelect`):**
+    - Displays the authentic Living Mobile world map illustration (`Image[23]`) with active level node indicators and stage info box.
+  - **Settings, High Scores, Rebinding & Pause Menus:**
+    - Unified across the authentic Living Mobile frame and typography while preserving full mouse, keyboard, and gamepad functionality.
+
 ## [1.5.4] - Audio Looping Stutter & Thread Decoupling Fix
 ### Fixed
 - **Audio Loop Stutter & Main Thread Freezes (`MidiPlayer.cs`):**

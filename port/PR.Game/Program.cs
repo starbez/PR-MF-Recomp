@@ -328,6 +328,58 @@ public static class Program
         screen.SavePng(Path.Combine(outDir, "main_menu.png"));
         Console.WriteLine("Captured: main_menu.png");
 
+        // 2b. Character Select
+        menu.State = GameState.CharacterSelect;
+        menu.Render(gr);
+        screen.SavePng(Path.Combine(outDir, "character_select.png"));
+        Console.WriteLine("Captured: character_select.png");
+
+        // 2c. Level Select
+        menu.State = GameState.LevelSelect;
+        menu.Render(gr);
+        screen.SavePng(Path.Combine(outDir, "level_select.png"));
+        Console.WriteLine("Captured: level_select.png");
+
+        // 2d. Options
+        menu.State = GameState.Options;
+        menu.Render(gr);
+        screen.SavePng(Path.Combine(outDir, "options.png"));
+        Console.WriteLine("Captured: options.png");
+
+        // 2e. High Scores
+        menu.State = GameState.HighScores;
+        menu.Render(gr);
+        screen.SavePng(Path.Combine(outDir, "high_scores.png"));
+        Console.WriteLine("Captured: high_scores.png");
+
+        // Capture 4:3 original menu frames for inspection
+        string ogOutDir = Path.Combine(Directory.GetCurrentDirectory(), "frames", "menu_original");
+        Directory.CreateDirectory(ogOutDir);
+        EngineTweaks.Widescreen = false;
+        var ogScreen = PR.Core.Graphics.Image.CreateImage(240, 320);
+        var ogGr = ogScreen.GetGraphics();
+        GMIDlet.var_javax_microedition_lcdui_Graphics_a = ogGr;
+
+        menu.State = GameState.Title;
+        menu.Render(ogGr);
+        ogScreen.SavePng(Path.Combine(ogOutDir, "title_screen.png"));
+
+        menu.State = GameState.MainMenu;
+        menu.Render(ogGr);
+        ogScreen.SavePng(Path.Combine(ogOutDir, "main_menu.png"));
+
+        menu.State = GameState.CharacterSelect;
+        menu.Render(ogGr);
+        ogScreen.SavePng(Path.Combine(ogOutDir, "character_select.png"));
+
+        menu.State = GameState.Options;
+        menu.Render(ogGr);
+        ogScreen.SavePng(Path.Combine(ogOutDir, "options.png"));
+
+        // Restore widescreen
+        EngineTweaks.Widescreen = true;
+        GMIDlet.var_javax_microedition_lcdui_Graphics_a = gr;
+
         void CaptureLevel(int level, string filename)
         {
             CoreGame.G = level;

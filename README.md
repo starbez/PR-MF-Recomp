@@ -14,13 +14,13 @@ Based on decompilation, bytecode analysis, and literal logic translation validat
 | Game logic | 100% | Phase 5 complete: Literal C# port (`PR.Core`) verified 100% bit-identical line-for-line across all 4 trace sets (608 ticks). |
 | Rendering | 100% | Phase 6 complete: Software renderer verified 100% pixel-identical (76,800/76,800 pixels) across all 7 reference frames. |
 | Window, scaling, input | 100% | Phase 7 complete: Raylib desktop window, integer scaling (1x..5x), fullscreen (F11), remappable Keyboard & Gamepad `InputRouter`. |
-| Menus, hi-scores, saving | 100% | Phase 7 complete: `%APPDATA%/PowerRangers/save.json`, High Scores hall of fame, character & level select, options. |
+| Menus, hi-scores, saving | 100% | Phase 7 complete: Authentic J2ME Living Mobile remake with original frames & art, `%APPDATA%/PowerRangers/save.json`, High Scores hall of fame, character & level select, options. |
 | Audio | 100% | Phase 7 & Task 1 complete: In-memory `/l` MIDI pack extraction, MCI sequencer looping fix, Raylib audio device init, audio logging & debug menu. |
 | **Estimated total** | 100% | All 7 phases complete. Verified bit-identical logic, pixel-identical rendering, fully playable desktop port. |
 | Task 1: Fix missing sound | 100% | DIAGNOSED & FIXED: MCI repeat parameter bug resolved, in-memory loader, verified 0 audio diffs with harness. |
 | Task 2: 60 FPS smooth | 100% | Original 70ms logic preserved, sub-frame interpolation for camera/actors, snap on teleports, switchable in menu. |
 | Task 3: Widescreen | 100% | DIAGNOSED & FIXED: Full 568x320 viewport buffer allocation, toroidal quadrant drawing, camera bounds clamping, 4:3 logic activation isolation, seamless boss arena edge extension. |
-| Task 4: Better menus | 100% | Modern settings layer (volume, sound on/off, language, FPS, widescreen, integer vs fit, fullscreen, rebinding, reset to defaults), mouse/gamepad navigation, Esc pause menu with settings & quit. |
+| Task 4: Better menus | 100% | Authentic J2ME remake: Living Mobile art assets (wallpaper tile, metallic borders, shield header, watermark, arrow sprites, world map), modern settings layer (volume, language, FPS, widescreen, scaling, rebinding), mouse/gamepad navigation, Esc pause menu. |
 
 ---
 
