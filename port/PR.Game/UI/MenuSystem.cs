@@ -402,7 +402,7 @@ public sealed class MenuSystem
 
                 case 7: // Fullscreen Toggle
                     _onFullscreenToggle();
-                    _saveManager.Data.Fullscreen = !_saveManager.Data.Fullscreen;
+                    _saveManager.Data.Fullscreen = _view.IsFullscreen;
                     _saveManager.Save();
                     break;
 
@@ -829,7 +829,7 @@ public sealed class MenuSystem
             $"SCREEN: < {(_saveManager.Data.Widescreen ? "WIDESCREEN" : "ORIGINAL")} >",
             $"SCALING: < {(_view.FitScaling ? "FIT" : "INTEGER")} >",
             $"WINDOW SCALE: < {_saveManager.Data.Scale}X >",
-            $"FULLSCREEN: < {(_saveManager.Data.Fullscreen ? "YES" : "NO")} >",
+            $"FULLSCREEN: < {(_view.IsFullscreen ? "YES" : "NO")} >",
             "CONTROLS: [ REBIND ]",
             "RESET TO DEFAULTS",
             "BACK"
@@ -916,7 +916,7 @@ public sealed class MenuSystem
             "MAGIC SPELL: L-CTRL / 0",
             "SPECIAL COMBO: ATTACK + MOVE",
             "PAUSE: ESCAPE / P",
-            "FULLSCREEN: F11",
+            "FULLSCREEN: ALT+ENTER / F11",
             "",
             "GAMEPAD SUPPORTED:",
             "D-PAD: MOVE",

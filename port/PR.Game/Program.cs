@@ -125,8 +125,10 @@ public static class Program
                 if (dt > 0.25f) dt = 0.25f; // Prevent spiral of death
                 accumulator += dt;
 
-                // F11 Fullscreen toggle shortcut
-                if (Raylib.IsKeyPressed(KeyboardKey.F11))
+                // Fullscreen toggle shortcut: F11 or Alt + Enter
+                bool altEnter = (Raylib.IsKeyDown(KeyboardKey.LeftAlt) || Raylib.IsKeyDown(KeyboardKey.RightAlt)) &&
+                                (Raylib.IsKeyPressed(KeyboardKey.Enter) || Raylib.IsKeyPressed(KeyboardKey.KpEnter));
+                if (Raylib.IsKeyPressed(KeyboardKey.F11) || altEnter)
                 {
                     view.ToggleFullscreen();
                     saveManager.Data.Fullscreen = view.IsFullscreen;

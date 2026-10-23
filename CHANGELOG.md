@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.1] - Fullscreen & Display Fix
+### Fixed
+- Fixed fullscreen toggle failure on Windows:
+  - Replaced exclusive video-mode switching with borderless windowed mode (`Raylib.ToggleBorderlessWindowed()`), ensuring clean fullscreen across all modern monitors and GPUs without resolution negotiation failures.
+  - Added universal `Alt + Enter` shortcut alongside `F11` (resolving issues on laptops where F11 requires the Fn key).
+  - Filtered `Alt + Enter` in `InputRouter` so Alt-combos do not accidentally trigger `KEY_FIRE` (attack/select).
+  - Synchronized the Settings menu Fullscreen toggle and display directly with the active window state (`_view.IsFullscreen`).
+
 ## [1.4.0] - Upgrades & Fixes: Task 4 (Modern Settings, Rebinding & Pause Layer)
 ### Added
 - Modern Settings & Options Layer:

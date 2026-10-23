@@ -21,7 +21,10 @@ public sealed class GameView : IDisposable
 
     public bool FitScaling { get; set; } = false;
     public int Scale => _scale;
-    public bool IsFullscreen => _fullscreen;
+    public bool IsFullscreen => _fullscreen || 
+                                Raylib.IsWindowState(ConfigFlags.BorderlessWindowMode) || 
+                                Raylib.IsWindowState(ConfigFlags.UndecoratedWindow) || 
+                                Raylib.IsWindowFullscreen();
     public int CurrentWidth => EngineTweaks.RenderWidth;
     public int CurrentHeight => EngineTweaks.RenderHeight;
 
@@ -43,16 +46,16 @@ public sealed class GameView : IDisposable
     public unsafe GameView(int scale, bool fullscreen)
     {
         _scale = Math.Clamp(scale, 1, 6);
-        _fullscreen = fullscreen;
         _activeCanvasWidth = CurrentWidth;
 
         Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
         Raylib.InitWindow(CurrentWidth * _scale, CurrentHeight * _scale, "Power Rangers: Mystic Force");
         Raylib.SetTargetFPS(60);
 
-        if (_fullscreen)
+        if (fullscreen)
         {
-            Raylib.ToggleFullscreen();
+            _fullscreen = false;
+            ToggleFullscreen();
         }
 
         // Allocate maximum texture size (568x320)
@@ -63,14 +66,49 @@ public sealed class GameView : IDisposable
 
     public void ToggleFullscreen()
     {
-        _fullscreen = !_fullscreen;
-        Raylib.ToggleFullscreen();
+        int monitor = Raylib.GetCurrentMonitor();
+        int monitorW = Raylib.GetMonitorWidth(monitor);
+        int monitorH = Raylib.GetMonitorHeight(monitor);
+
+        if (IsFullscreen)
+        {
+            _fullscreen = false;
+            if (Raylib.IsWindowState(ConfigFlags.BorderlessWindowMode) || Raylib.IsWindowState(ConfigFlags.UndecoratedWindow))
+            {
+                Raylib.ToggleBorderlessWindowed();
+            }
+            if (Raylib.IsWindowFullscreen())
+            {
+                Raylib.ToggleFullscreen();
+            }
+
+            int winW = CurrentWidth * _scale;
+            int winH = CurrentHeight * _scale;
+            Raylib.SetWindowSize(winW, winH);
+
+            int posX = Math.Max(0, (monitorW - winW) / 2);
+            int posY = Math.Max(0, (monitorH - winH) / 2);
+            Raylib.SetWindowPosition(posX, posY);
+        }
+        else
+        {
+            _fullscreen = true;
+            // Borderless Windowed mode expands to full desktop resolution without video mode errors
+            Raylib.ToggleBorderlessWindowed();
+
+            // Fallback to exclusive fullscreen if borderless didn't apply
+            if (!IsFullscreen)
+            {
+                Raylib.SetWindowSize(monitorW, monitorH);
+                Raylib.ToggleFullscreen();
+            }
+        }
     }
 
     public void SetScale(int scale)
     {
         _scale = Math.Clamp(scale, 1, 6);
-        if (!_fullscreen)
+        if (!IsFullscreen)
         {
             Raylib.SetWindowSize(CurrentWidth * _scale, CurrentHeight * _scale);
         }
@@ -79,7 +117,7 @@ public sealed class GameView : IDisposable
     public void UpdateWidescreenMode()
     {
         _activeCanvasWidth = CurrentWidth;
-        if (!_fullscreen)
+        if (!IsFullscreen)
         {
             Raylib.SetWindowSize(CurrentWidth * _scale, CurrentHeight * _scale);
         }

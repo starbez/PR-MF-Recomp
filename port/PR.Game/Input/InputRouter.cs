@@ -255,9 +255,12 @@ public sealed class InputRouter
 
     private static void CheckKeyboardAction(List<KeyboardKey> keys, int actionCode, HashSet<int> active)
     {
+        bool altHeld = Raylib.IsKeyDown(KeyboardKey.LeftAlt) || Raylib.IsKeyDown(KeyboardKey.RightAlt);
         for (int i = 0; i < keys.Count; i++)
         {
-            if (Raylib.IsKeyDown(keys[i]))
+            var k = keys[i];
+            if (altHeld && (k == KeyboardKey.Enter || k == KeyboardKey.KpEnter)) continue;
+            if (Raylib.IsKeyDown(k))
             {
                 active.Add(actionCode);
                 return;

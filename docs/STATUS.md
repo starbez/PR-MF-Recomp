@@ -196,6 +196,14 @@
 - **Validation:**
   - Tweak logic isolated from core engine; all 608 simulation ticks and 7 reference frames continue to pass 100% bit-identical.
 
+### 2. Fullscreen Troubleshooting & Fix
+- **Root Cause:** Standard Raylib `ToggleFullscreen()` attempts exclusive video-mode switching using the current window size (e.g. 1704x960), which Windows display drivers reject. Furthermore, laptops often require pressing `Fn + F11` for F11.
+- **Resolution:**
+  - Wired `Raylib.ToggleBorderlessWindowed()` with proper monitor boundary detection.
+  - Added universal `Alt + Enter` hotkey alongside `F11`.
+  - Added Alt-key suppression in `InputRouter` so `Alt + Enter` does not fire in-game attacks.
+  - Verified live status reflection in Settings menu.
+
 
 
 
