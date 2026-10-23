@@ -56,4 +56,37 @@
   - Serialization in `Game.a(DataOutputStream)` and `Game.b(DataInputStream)` matches Java binary layout.
 
 ### 3. What is Still Unknown
-- Software renderer exact pixel blending / clipping parity for Phase 6 (to be verified next against recorded reference frames).
+- None for simulation logic.
+
+## Status after Phase 6 (Software Renderer & Frame Validation)
+
+### 1. What is Done
+- Implemented clean-room software rasterizer in `port/PR.Core/Graphics/`:
+  - `Image`: In-memory 32-bit ARGB pixel buffer (`uint[]`), PNG decoding via `StbImageSharp`, sub-image slicing, PNG saving via `StbImageWriteSharp`.
+  - `Graphics`: Complete 240x320 MIDP 2.0 graphics engine supporting `Translate`, `SetClip`, `ClipRect`, `FillRect`, `DrawRect`, `DrawLine`, `DrawImage`, `DrawRegion` with all MIDP transform modes (0 through 7 + raw degree angle conventions), and source-over alpha blending.
+  - `GMIDlet`: Living Mobile resource stream unpacker with delta-palette reconstruction, PNG font atlas decoding, font metric tables from `/font`, proportional bitmap font glyph renderer, word wrapping (`WordWrap`), and multi-layer diacritic/accent/umlaut composition.
+- Integrated full rendering pipeline into `port/PR.Core`:
+  - `TileMap.cs`: Background tile loop (`void_b`), offscreen repeating canvas caching, layer parallax blending.
+  - `Actor.cs`: Multi-frame animation rendering (`a`, `c`, `d`) with sub-frame offsets and horizontal flips.
+  - `Game.cs`: Full render loop (`d()`), boss HUD, health/magic gauge drawing (`m()`), letterbox black bars, cutscene/dialogue bubbles (`a()`), skip prompt (`Überspr.`).
+  - `App.cs`: Wired up `serviceRepaints()` and `repaint()` dispatching to game renderer on each frame.
+- Differential Frame Testing:
+  - Extended `port/PR.TraceTest` with `--frames` flag.
+  - Verified 100% bit-for-bit pixel-identical rendering against ground-truth frames from Java bytecode harness:
+    - `frame_0000.png` (Tick 0)   - **PASSED: 100% pixel-identical (76,800/76,800 pixels match)**
+    - `frame_0025.png` (Tick 25)  - **PASSED: 100% pixel-identical (76,800/76,800 pixels match)**
+    - `frame_0050.png` (Tick 50)  - **PASSED: 100% pixel-identical (76,800/76,800 pixels match)**
+    - `frame_0075.png` (Tick 75)  - **PASSED: 100% pixel-identical (76,800/76,800 pixels match)**
+    - `frame_0100.png` (Tick 100) - **PASSED: 100% pixel-identical (76,800/76,800 pixels match)**
+    - `frame_0125.png` (Tick 125) - **PASSED: 100% pixel-identical (76,800/76,800 pixels match)**
+    - `frame_0149.png` (Tick 149) - **PASSED: 100% pixel-identical (76,800/76,800 pixels match)**
+
+### 2. What is Verified vs. Inferred
+- **Pixel-for-Pixel Visual Parity: [verified]**
+  - All 7 reference frames dumped from the original Java engine match C# software renderer at 0 diffs across all 76,800 pixels per frame.
+- **Font & Text Engine: [verified]**
+  - Living Mobile proportional font table, word-wrap line breaking, and umlaut/accent glyph positioning are 100% bit-identical with original engine.
+
+### 3. What is Still Unknown
+- None for rendering and logic. Ready for Phase 7 (PC frontend, audio, controls, saves).
+

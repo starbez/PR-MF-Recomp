@@ -1,4 +1,5 @@
 using System;
+using PR.Core.Graphics;
 
 namespace PR.Core;
 
@@ -8,6 +9,10 @@ namespace PR.Core;
 /// </summary>
 public sealed class Actor
 {
+    public static IResourceProvider? ResourceProvider;
+    public static Image?[]? var_javax_microedition_lcdui_Image_arr_a;
+    public static short[]? var_short_arr_c;
+
     // Static sprite / hitbox data
     public static byte[]? var_byte_arr_b; // Loaded from /fr (5 bytes per frame rect)
     public static Actor[]? var_a_arr_a;   // Loaded from /spr (archetype templates)
@@ -170,17 +175,173 @@ public sealed class Actor
 
     public static void c(int n)
     {
-        // Image bank size allocation in original GMIDlet
+        var_javax_microedition_lcdui_Image_arr_a = new Image[n];
+        var_short_arr_c = new short[n];
     }
 
     public void d(int n)
     {
-        // Sprite sheet slice loading
+        int n2 = 1 << (8 + n);
+        if (y > 0 && var_byte_arr_arr_a != null && ResourceProvider != null && var_short_arr_c != null)
+        {
+            for (int i = 0; i < var_byte_arr_arr_a.Length; ++i)
+            {
+                sbyte[] byArray = var_byte_arr_arr_a[i];
+                int n3 = 5;
+                while (n3 < byArray.Length)
+                {
+                    int n4;
+                    int n5;
+                    int n6;
+                    n3 += 2;
+                    byte by = (byte)byArray[n3++];
+                    byte by2 = (byte)byArray[n3++];
+                    int n7 = (short)((short)(by << 8) | by2);
+                    int n8 = var_byte_arr_b![(n7 * 5) + 4];
+                    int n9 = var_short_arr_c[n8] & 0x7F;
+                    if (n < 0)
+                    {
+                        n6 = n;
+                        n5 = 0;
+                        for (n4 = 0; n4 < n9; ++n4)
+                        {
+                            n5 |= (short)(1 << (8 + n4));
+                        }
+                    }
+                    else if (n9 - 1 < n)
+                    {
+                        n6 = n9 > 0 ? n9 - 1 : n;
+                        n5 = (short)(1 << (8 + n6));
+                    }
+                    else
+                    {
+                        n6 = n;
+                        n5 = n2;
+                    }
+                    if ((var_short_arr_c[n8] & n5) != 0) continue;
+                    n4 = n8;
+                    try
+                    {
+                        using var stream = ResourceProvider.OpenResource("s" + n4);
+                        if (stream != null)
+                        {
+                            using var dis = new DataReader(stream);
+                            GMIDlet.a(dis, var_javax_microedition_lcdui_Image_arr_a!, var_short_arr_c, n8, n6, true);
+                        }
+                    }
+                    catch { }
+                }
+            }
+        }
     }
 
-    public void void_c()
+    public bool a(int n, int n2)
     {
-        // Unload sprite sheets
+        if (!var_boolean_f || !var_boolean_a || (var_boolean_c && r < 25 && (r & 1) != 0))
+        {
+            return false;
+        }
+
+        int n3 = n + var_int_d;
+        int n4 = n2 + var_int_e;
+        var_int_b = int_a();
+        int n5 = 0;
+        if (var_byte_arr_arr_a == null || var_int_a >= var_byte_arr_arr_a.Length) return false;
+        sbyte[] byArray = var_byte_arr_arr_a[var_int_a];
+        sbyte by = byArray[0];
+
+        switch (var_int_b)
+        {
+            case 3:
+                if (by == 2) n5 = 2;
+                else if (by == 4) n5 = 90;
+                break;
+            case 1:
+                if (by == 4) n5 = 270;
+                break;
+            case 2:
+                if (by == 3) n5 = 1;
+                else if (by == 4) n5 = 180;
+                break;
+        }
+
+        long l = 1L;
+        int n6 = 5;
+        while (n6 < byArray.Length)
+        {
+            if ((var_long_a & l) == 0L)
+            {
+                n6 += 4;
+                l <<= 1;
+                continue;
+            }
+            l <<= 1;
+            int n7 = byArray[n6++];
+            int n8 = byArray[n6++];
+            byte by2 = (byte)byArray[n6++];
+            byte by3 = (byte)byArray[n6++];
+            int n9 = (short)((short)(by2 << 8) | by3);
+            n9 *= 5;
+
+            int n10 = var_byte_arr_b![n9++] & 0xFF;
+            int n11 = var_byte_arr_b[n9++] & 0xFF;
+            byte by4 = var_byte_arr_b[n9++];
+            byte by5 = var_byte_arr_b[n9++];
+            int n12 = var_byte_arr_b[n9];
+
+            short s = var_short_arr_c != null && n12 < var_short_arr_c.Length ? var_short_arr_c[n12] : (short)0;
+            int n13 = w < (s & 0x7F) ? w : 0;
+            Image? image = (var_javax_microedition_lcdui_Image_arr_a != null && (n12 + n13) < var_javax_microedition_lcdui_Image_arr_a.Length)
+                ? var_javax_microedition_lcdui_Image_arr_a[n12 + n13] : null;
+
+            if (by == 2 || by == 4 || by == 8)
+            {
+                switch (var_int_b)
+                {
+                    case 3:
+                        n7 = -n7 - by4;
+                        break;
+                    case 2:
+                        n8 = -n8 - by5;
+                        break;
+                }
+            }
+
+            if (image != null && GMIDlet.var_javax_microedition_lcdui_Graphics_a != null)
+            {
+                GMIDlet.var_javax_microedition_lcdui_Graphics_a.DrawRegion(image, n10, n11, by4, by5, n5, n7 + n3, n8 + n4, 20);
+            }
+        }
+
+        var_boolean_o = false;
+        if (boolean_a(1) && Game.var_a_d != null)
+        {
+            Actor a2 = Game.var_a_d;
+            Game.var_a_d.var_int_d = var_int_d;
+            a2.var_int_e = var_int_e;
+            a2.a(n, n2);
+        }
+        return false;
+    }
+
+    public static void a(Actor[]? aArray, int n, int n2, int n3)
+    {
+        if (aArray == null) return;
+        int n4 = -n - 10;
+        int n5 = 240 - n + 10;
+        int n6 = -n2 - 10;
+        int n7 = 320 - n2 + 10;
+        for (int i = aArray.Length - 1; i >= 0; --i)
+        {
+            Actor a2 = aArray[i];
+            if (a2 == null) continue;
+            if (n3 == 1 ? (a2.int_e() < n4 || a2.int_d() > n5 || a2.var_int_e < n6 || a2.int_f() > n7)
+                        : (n3 == 2 && (a2.int_h() < n4 || a2.int_g() > n5 || a2.int_j() < n6 || a2.int_i() > n7)))
+            {
+                continue;
+            }
+            aArray[i].a(n, n2);
+        }
     }
 
     public void a(DataReader dis, bool isTrigger)

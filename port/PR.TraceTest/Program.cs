@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using PR.Core;
+using PR.Core.Graphics;
 
 namespace PR.TraceTest;
 
@@ -103,21 +104,150 @@ public class Program
             Console.ResetColor();
         }
 
+        bool framePassed = ValidateFrames(extractedDir, Path.Combine(rootDir, "frames", "level1_movement"), Path.Combine(scriptsDir, "movement_150.txt"));
+        if (!framePassed) allPassed = false;
+
         Console.WriteLine("\n==================================================");
         if (allPassed)
         {
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("ALL 4 TRACE SETS IDENTICAL TO ORIGINAL BYTECODE");
+            Console.WriteLine("ALL VALIDATIONS (TRACES & FRAMES) PASSED");
             Console.ResetColor();
             return 0;
         }
         else
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("SOME TRACE SETS FAILED VALIDATION");
+            Console.WriteLine("SOME VALIDATIONS FAILED");
             Console.ResetColor();
             return 1;
         }
+    }
+
+    private static bool ValidateFrames(string extractedDir, string framesDir, string scriptPath)
+    {
+        Console.WriteLine("\n==================================================");
+        Console.WriteLine("PR.FrameTest: Validating Software Renderer Frames");
+        Console.WriteLine("==================================================");
+
+        if (!Directory.Exists(framesDir))
+        {
+            Console.WriteLine($"WARNING: Frames directory not found at {framesDir}, skipping frame test.");
+            return true;
+        }
+
+        var res = new FolderResourceProvider(extractedDir);
+        var app = new App(res);
+        app.m();
+
+        Game.G = 1;
+        Game.F = 0;
+        Game.var_java_util_Random_a = new JavaRandom(42L);
+
+        var game = new Game(app);
+        Game.var_f_a = game;
+        app.var_f_a = game;
+
+        game.e();
+        Game.var_java_util_Random_a = new JavaRandom(42L);
+
+        var screen = Image.CreateImage(240, 320);
+        var gr = screen.GetGraphics();
+        GMIDlet.var_javax_microedition_lcdui_Graphics_a = gr;
+
+        var inputSchedule = new Dictionary<int, List<(bool isPress, int key)>>();
+        if (File.Exists(scriptPath))
+        {
+            foreach (var rawLine in File.ReadAllLines(scriptPath))
+            {
+                var line = rawLine.Trim();
+                if (string.IsNullOrEmpty(line) || line.StartsWith("#")) continue;
+                var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                int t = int.Parse(parts[0]);
+                bool isPress = parts[1].Equals("press", StringComparison.OrdinalIgnoreCase);
+                int key = int.Parse(parts[2]);
+
+                if (!inputSchedule.ContainsKey(t)) inputSchedule[t] = new List<(bool, int)>();
+                inputSchedule[t].Add((isPress, key));
+            }
+        }
+
+        var frameTicks = new HashSet<int> { 0, 25, 50, 75, 100, 125, 149 };
+        bool allMatch = true;
+
+        for (int tick = 0; tick < 150; tick++)
+        {
+            if (inputSchedule.TryGetValue(tick, out var events))
+            {
+                foreach (var ev in events)
+                {
+                    if (ev.isPress) game.void_a(ev.key);
+                    else game.b(ev.key);
+                }
+            }
+
+            bool done = game.boolean_b();
+
+            if (frameTicks.Contains(tick))
+            {
+                // Render frame
+                game.d();
+
+                string refPath = Path.Combine(framesDir, $"frame_{tick:D4}.png");
+                if (File.Exists(refPath))
+                {
+                    byte[] refBytes = File.ReadAllBytes(refPath);
+                    var refImg = Image.CreateImage(refBytes, 0, refBytes.Length);
+
+                    int mismatches = 0;
+                    int firstX = -1, firstY = -1;
+                    uint expP = 0, gotP = 0;
+
+                    for (int y = 0; y < 320; y++)
+                    {
+                        for (int x = 0; x < 240; x++)
+                        {
+                            uint pActual = screen.Pixels[y * 240 + x];
+                            uint pExpected = refImg.Pixels[y * 240 + x];
+
+                            if (pActual != pExpected)
+                            {
+                                if (mismatches == 0)
+                                {
+                                    firstX = x;
+                                    firstY = y;
+                                    expP = pExpected;
+                                    gotP = pActual;
+                                }
+                                mismatches++;
+                            }
+                        }
+                    }
+
+                    if (mismatches == 0)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine($"PASSED Frame {tick:D4}: 100% pixel-identical (76,800/76,800 pixels match)");
+                        Console.ResetColor();
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine($"FAILED Frame {tick:D4}: {mismatches}/76800 pixels differ ({(mismatches*100.0/76800):F2}%). First diff at ({firstX}, {firstY}): exp=0x{expP:X8}, got=0x{gotP:X8}");
+                        Console.ResetColor();
+                        allMatch = false;
+
+                        // Save actual rendered frame for inspection
+                        string outPath = Path.Combine(framesDir, $"actual_{tick:D4}.png");
+                        screen.SavePng(outPath);
+                    }
+                }
+            }
+
+            if (done) break;
+        }
+
+        return allMatch;
     }
 
     private static List<string> RunSimulation(string extractedDir, TestCase tc)

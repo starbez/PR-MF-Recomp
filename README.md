@@ -12,11 +12,11 @@ Based on decompilation, bytecode analysis, and literal logic translation validat
 |---|---|---|
 | Decompilation and analysis | 100% | Phase 1 & 2 complete. All classes analyzed, bytecode audited, state machine documented. |
 | Game logic | 100% | Phase 5 complete: Literal C# port (`PR.Core`) verified 100% bit-identical line-for-line across all 4 trace sets (608 ticks). |
-| Rendering | 25% | Reference frames recorded from original bytecode for frame validation. |
+| Rendering | 100% | Phase 6 complete: Software renderer verified 100% pixel-identical (76,800/76,800 pixels) across all 7 reference frames. |
 | Window, scaling, input | 0% | Phase 7 |
 | Menus, hi-scores, saving | 25% | Formats and RMS byte layout fully mapped, serialization ported |
 | Audio | 50% | Both MIDI tracks extracted from `l` pack to `sons/` and verified |
-| **Estimated total** | 60% | Phases 1-5 complete. Logic verified bit-identical to original J2ME bytecode. |
+| **Estimated total** | 75% | Phases 1-6 complete. Logic and rendering verified bit-identical to original J2ME bytecode. |
 
 ---
 

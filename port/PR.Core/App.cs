@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using PR.Core.Graphics;
 
 namespace PR.Core;
 
@@ -14,6 +15,10 @@ public sealed class App
     public static int var_int_a = DefaultCanvasWidth;
     public static int var_int_b = DefaultCanvasHeight;
     public static int var_int_g = 0; // Cumulative score
+
+    public static readonly string[] var_java_lang_String_arr_b = { "en", "de", "fr", "it" };
+    public static string[]? var_java_lang_String_arr_a;
+    public static string[][]? var_java_lang_String_arr_arr_a;
 
     public static int[] var_int_arr_a = new int[5]; // Story high scores
     public static int[] var_int_arr_b = new int[5]; // Survival high scores
@@ -191,6 +196,47 @@ public sealed class App
                     }
                 }
             }
+
+            sbyte n2 = dis.ReadByte();
+            sbyte actorImgCount = dis.ReadByte();
+            GMIDlet.void_a(n2);
+            int n = 0;
+            ++n;
+            GMIDlet.a(dis, 0);
+            ++n;
+            GMIDlet.a(dis, 1);
+            while (n < n2)
+            {
+                GMIDlet.a(dis, GMIDlet.var_javax_microedition_lcdui_Image_arr_a!, GMIDlet.var_short_arr_a!, n++, -1, false);
+            }
+            dis.ReadByte();
+
+            Actor.ResourceProvider = ResourceProvider;
+            Actor.c(actorImgCount);
+        }
+
+        // 1.5 Parse /font
+        using (var fontStream = ResourceProvider.OpenResource("font"))
+        {
+            if (fontStream != null)
+            {
+                using var fontDis = new DataReader(fontStream);
+                GMIDlet.void_a(fontDis);
+            }
+        }
+
+        // 1.6 Parse /text__en.txt
+        using (var textStream = ResourceProvider.OpenResource("text__" + var_java_lang_String_arr_b[var_byte_d] + ".txt"))
+        {
+            if (textStream != null)
+            {
+                using var textDis = new DataReader(textStream);
+                var_java_lang_String_arr_a = ReadStringArray(textDis);
+                var_java_lang_String_arr_arr_a = new string[3][];
+                var_java_lang_String_arr_arr_a[0] = ReadStringArray(textDis);
+                var_java_lang_String_arr_arr_a[1] = ReadStringArray(textDis);
+                var_java_lang_String_arr_arr_a[2] = ReadStringArray(textDis);
+            }
         }
 
         // 2. Parse /fr
@@ -224,10 +270,15 @@ public sealed class App
 
     public void repaint()
     {
+        if (GMIDlet.var_javax_microedition_lcdui_Graphics_a != null && var_f_a != null)
+        {
+            var_f_a.d();
+        }
     }
 
     public void serviceRepaints()
     {
+        repaint();
     }
 
     public void a(object? screen)
@@ -265,5 +316,19 @@ public sealed class App
             using var dr = new DataReader(ms);
             Game.void_a(dr);
         }
+    }
+
+    private static string[] ReadStringArray(DataReader dis)
+    {
+        int count = dis.ReadShort();
+        string[] arr = new string[count];
+        for (int i = 0; i < count; i++)
+        {
+            int len = dis.ReadUnsignedShort();
+            byte[] buf = new byte[len];
+            dis.ReadFully(buf);
+            arr[i] = System.Text.Encoding.UTF8.GetString(buf);
+        }
+        return arr;
     }
 }

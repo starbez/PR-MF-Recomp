@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using PR.Core.Graphics;
 
 namespace PR.Core;
 
@@ -59,6 +60,8 @@ public sealed class Game
     public static bool var_boolean_e; // Survival mode active
     public static bool var_boolean_f;
     public static bool var_boolean_g;
+    public static bool var_boolean_h;
+    public static bool var_boolean_i;
     public static bool var_boolean_j; // God mode / invincibility
     public static bool var_boolean_k;
 
@@ -266,6 +269,249 @@ public sealed class Game
         var_boolean_l = true;
     }
 
+    private string? var_java_lang_String_b_hud;
+    private int aL = -1;
+
+    public void d()
+    {
+        if (var_boolean_l) return;
+        var gr = GMIDlet.var_javax_microedition_lcdui_Graphics_a;
+        if (gr == null) return;
+
+        int n4 = ac - (var_int_c >> 1);
+        int n5 = ad - (var_int_d >> 1);
+
+        gr.Translate(-gr.GetTranslateX(), -gr.GetTranslateY() + var_int_b);
+
+        if (aG > 0 && var_byte_arr_g != null)
+        {
+            --aG;
+            n4 += var_byte_arr_g[aG + aG];
+            n5 += var_byte_arr_g[aG + aG + 1];
+        }
+
+        if (G == D)
+        {
+            gr.SetColor(0);
+            gr.FillRect(0, 21, var_int_c, 35);
+        }
+
+        if (aD > 0)
+        {
+            gr.SetColor((aD & 1) == 0 ? 0xFF0000 : 0xFFFFFF);
+            gr.FillRect(0, 0, var_int_c, var_int_d);
+        }
+        else if (var_c_arr_a != null)
+        {
+            for (int n3 = 0; n3 <= aj && n3 < var_c_arr_a.Length; ++n3)
+            {
+                int n2 = n4 * var_c_arr_a[n3].i / 10 - var_c_arr_a[n3].k;
+                int n = n5 * var_c_arr_a[n3].j / 10 - var_c_arr_a[n3].l;
+                var_c_arr_a[n3].void_b(n2, n);
+            }
+        }
+
+        gr.SetClip(0, 0, var_int_c, var_int_d);
+        if (!var_boolean_h)
+        {
+            Actor.a(var_a_arr_a, -n4, -n5, 2);
+        }
+        Actor.a(var_a_arr_i, -n4, -n5, 0);
+        if (!var_boolean_i)
+        {
+            Actor.a(var_a_arr_g, -n4, -n5, 1);
+        }
+        Actor.a(var_a_arr_h, -n4, -n5, 0);
+
+        if (var_a_arr_b != null)
+        {
+            for (int n3 = 0; n3 < M; ++n3)
+            {
+                var_a_arr_b[n3]?.a(-n4, -n5);
+            }
+        }
+
+        if (var_a_e != null && var_a_e.var_boolean_a && ((E > 8 && E < 92) || (E & 1) == 0))
+        {
+            var_a_e.a(-n4, -n5);
+        }
+
+        if (var_a_f != null)
+        {
+            var_a_f.a(-n4, -n5);
+        }
+
+        if (var_a_g != null && var_a_g.x != -1)
+        {
+            if (var_a_h != null)
+            {
+                var_a_g.var_int_d = var_a_h.var_int_d;
+                var_a_g.var_int_e = (var_a_h.var_int_e + var_a_h.int_f()) >> 1;
+                var_a_g.var_int_d += (var_java_util_Random_a.NextInt() & 0xF) - 7;
+                var_a_g.var_int_e += (var_java_util_Random_a.NextInt() & 0xF) - 7;
+            }
+            var_a_g.a(-n4, -n5);
+        }
+
+        Actor.a(var_a_arr_c, -n4, -n5, 0);
+        Actor.a(var_a_arr_e, -n4, -n5, 0);
+
+        if (aD == 0 && var_c_arr_a != null)
+        {
+            for (int n3 = aj + 1; n3 < ai && n3 < var_c_arr_a.Length; ++n3)
+            {
+                int n2 = n4 * var_c_arr_a[n3].i / 10 - var_c_arr_a[n3].k;
+                int n = n5 * var_c_arr_a[n3].j / 10 - var_c_arr_a[n3].l;
+                var_c_arr_a[n3].void_b(n2, n);
+            }
+        }
+
+        gr.SetClip(0, 0, var_int_c, var_int_d);
+        if (!var_boolean_h)
+        {
+            Actor.a(var_a_arr_d, -n4, -n5, 2);
+        }
+        Actor.a(var_a_arr_f, -n4, -n5, 0);
+
+        m();
+
+        gr.Translate(-gr.GetTranslateX(), -gr.GetTranslateY() + var_int_b);
+        gr.SetClip(0, 0, var_int_c, var_int_d);
+
+        if (au != 0)
+        {
+            gr.SetColor(0);
+            gr.FillRect(0, 0, var_int_c, au);
+            gr.FillRect(0, var_int_d - au, var_int_c, au);
+            gr.SetColor(0xFFFFFF);
+            gr.DrawLine(0, au, var_int_c, au);
+            gr.DrawLine(0, var_int_d - au, var_int_c, var_int_d - au);
+        }
+
+        if (ax > 0 && var_java_lang_String_arr_a != null)
+        {
+            --ax;
+            int n3 = GMIDlet.c(0);
+            int n2 = var_java_lang_String_arr_a.Length * n3 + 6;
+            int n = var_a_j != null ? var_a_j.var_int_d - n4 : var_int_e;
+            int n6 = var_a_j != null ? var_a_j.var_int_e - n5 - 55 - n2 : var_int_f - (n2 >> 1);
+            if ((n -= aw >> 1) > var_int_c - aw) n = var_int_c - aw;
+            if (n < 0) n = 0;
+            if (n6 < 20) n6 = 20;
+
+            gr.SetColor(var_a_j != null && var_a_j.s == var_a_f?.s && var_int_arr_a != null ? var_int_arr_a[var_a_j.w] : 0);
+            gr.FillRect(n, n6, aw, n2);
+            gr.SetColor(3551021);
+            gr.DrawRect(n, n6, aw - 1, n2 - 1);
+            gr.DrawRect(n + 1, n6 + 1, aw - 2, n2 - 2);
+            gr.SetColor(13087385);
+            gr.DrawRect(n, n6, aw - 2, n2 - 2);
+            n += 3;
+            n6 += 5;
+            for (int i = 0; i < var_java_lang_String_arr_a.Length; ++i)
+            {
+                GMIDlet.a(0, var_java_lang_String_arr_a[i], n, n6, 20);
+                n6 += n3;
+            }
+            if (var_boolean_e && ax == 0 && var_boolean_o)
+            {
+                var_boolean_t = false;
+                var_boolean_o = false;
+                this.n();
+            }
+        }
+
+        if (R != -1 || var_boolean_o)
+        {
+            if (App.var_java_lang_String_arr_a != null && App.var_java_lang_String_arr_a.Length > 41)
+            {
+                GMIDlet.a(1, App.var_java_lang_String_arr_a[41], var_int_c - 1, var_int_d, 40);
+            }
+        }
+        GMIDlet.a(26, 2, var_int_d - 2, 36);
+    }
+
+    private void m()
+    {
+        var gr = GMIDlet.var_javax_microedition_lcdui_Graphics_a;
+        if (gr == null) return;
+
+        gr.Translate(-gr.GetTranslateX(), -gr.GetTranslateY());
+        gr.SetClip(0, 0, var_int_c, var_int_d + var_int_b);
+
+        if (var_a_i != null && var_a_i.var_boolean_j && GMIDlet.var_javax_microedition_lcdui_Image_arr_a != null)
+        {
+            var bossFrame = GMIDlet.var_javax_microedition_lcdui_Image_arr_a[14];
+            if (bossFrame != null) gr.DrawImage(bossFrame, 0, 24, 20);
+            a(10, 26, 84, var_a_i.z, var_a_i.A, 16774248, 15885602);
+        }
+
+        if (GMIDlet.var_javax_microedition_lcdui_Image_arr_a != null)
+        {
+            Image? image = GMIDlet.var_javax_microedition_lcdui_Image_arr_a[13];
+            if (image != null) gr.DrawImage(image, 0, 0, 20);
+        }
+
+        int col1 = 15539236;
+        int col2 = 15565446;
+        if (var_boolean_v)
+        {
+            col2 = 0xFFFFFF;
+            col1 = 0xFFFFFF;
+            var_boolean_v = false;
+        }
+
+        if (var_a_f != null)
+        {
+            a(3, 2, 57, var_a_f.z, var_a_f.A, col1, col2);
+        }
+        a(3, 10, 57, an, am, an < 320 ? 0xEE66EE : 44527, 8311023);
+
+        if (var_a_f != null)
+        {
+            a(72, 2, var_a_f.z, var_a_f.A);
+        }
+        a(72, 10, an / 64, am / 64);
+
+        if (var_java_lang_String_b_hud == null || aL != App.var_int_g)
+        {
+            aL = App.var_int_g;
+            string prefix = (App.var_java_lang_String_arr_a != null && App.var_java_lang_String_arr_a.Length > 32)
+                ? App.var_java_lang_String_arr_a[32] : "SCORE";
+            var_java_lang_String_b_hud = prefix + ":" + App.var_int_g;
+        }
+        GMIDlet.a(1, var_java_lang_String_b_hud, 120, 5, 20);
+    }
+
+    private void a(int n, int n2, int n3, int n4)
+    {
+        GMIDlet.a(12, n3, n3 > 9 ? 2 : 1, n, n2, 2, 11, false);
+        GMIDlet.a(12, n + 3, n2, 11, 1, 10, 0);
+        GMIDlet.a(12, n4, n4 > 9 ? 2 : 1, n + (n4 > 9 ? 15 : 11), n2, 2, 11, false);
+    }
+
+    private void a(int n, int n2, int n3, int n4, int n5, int n6, int n7)
+    {
+        var gr = GMIDlet.var_javax_microedition_lcdui_Graphics_a;
+        if (gr == null) return;
+        int n8 = n3;
+        int n9 = n8 * n4 / n5;
+        if (n9 < 1) n9 = 1;
+        else if (n9 > n8) n9 = n8;
+        if (n4 <= 0) n9 = 0;
+
+        n9 += n;
+        gr.SetColor(n6);
+        gr.DrawLine(n, n2 + 1, n9, n2 + 1);
+        gr.DrawLine(n, n2 + 2, n9, n2 + 2);
+        gr.DrawLine(n, n2 + 3, n9, n2 + 3);
+        gr.DrawLine(n, n2 + 4, n9, n2 + 4);
+        gr.DrawLine(n, n2 + 5, n9, n2 + 5);
+        gr.SetColor(n7);
+        gr.DrawLine(n, n2, n9, n2);
+        gr.DrawLine(n, n2 + 6, n9, n2 + 6);
+    }
+
     public void void_a(int key)
     {
         if (key == -7)
@@ -464,6 +710,23 @@ public sealed class Game
             var_g_a.a(5, 6);
             X = var_c_arr_a[0].var_byte_a;
             Y = palId;
+            if (GMIDlet.var_javax_microedition_lcdui_Image_arr_a != null)
+            {
+                GMIDlet.var_javax_microedition_lcdui_Image_arr_a[4] = null;
+                using (var bgStream = var_g_a.ResourceProvider.OpenResource("bg" + X))
+                {
+                    if (bgStream != null)
+                    {
+                        using var bgDis = new DataReader(bgStream);
+                        GMIDlet.a(bgDis, GMIDlet.var_javax_microedition_lcdui_Image_arr_a, GMIDlet.var_short_arr_a!, 4, Y, false);
+                    }
+                }
+                TileMap.var_javax_microedition_lcdui_Image_a = GMIDlet.var_javax_microedition_lcdui_Image_arr_a[4];
+                if (TileMap.var_javax_microedition_lcdui_Image_a != null)
+                {
+                    TileMap.h = TileMap.var_javax_microedition_lcdui_Image_a.Width / TileMap.var_int_b;
+                }
+            }
             var_g_a.a(6, 6);
 
             for (int i = 0; i < var_a_arr_d.Length; ++i)
@@ -2336,11 +2599,23 @@ public sealed class Game
         if (ap != -1) ap *= TileMap.var_int_b;
     }
 
-    private void a(Actor? actor, int sX, int sY, int sW, int sH)
+    private void a(Actor? actor, int grp, int idx, int sW, int sH)
     {
+        if (App.var_java_lang_String_arr_arr_a != null &&
+            grp >= 0 && grp < App.var_java_lang_String_arr_arr_a.Length &&
+            idx >= 0 && idx < App.var_java_lang_String_arr_arr_a[grp].Length)
+        {
+            a(actor, App.var_java_lang_String_arr_arr_a[grp][idx], sW, sH);
+        }
+    }
+
+    private void a(Actor? actor, string str, int sW, int sH)
+    {
+        if (sW > App.var_int_a) sW = App.var_int_a;
         var_a_j = actor;
         aw = sW;
         ax = sH;
+        var_java_lang_String_arr_a = GMIDlet.WordWrap(str, sW - 7, 0);
         var_boolean_q = true;
     }
 

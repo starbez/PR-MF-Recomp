@@ -1,4 +1,5 @@
 using System;
+using PR.Core.Graphics;
 
 namespace PR.Core;
 
@@ -9,6 +10,11 @@ public sealed class TileMap
 {
     public const int var_int_a = 4;
     public const int var_int_b = 16;
+
+    public static Image? var_javax_microedition_lcdui_Image_a;
+    public Image? var_javax_microedition_lcdui_Image_b;
+    public Graphics.Graphics? var_javax_microedition_lcdui_Graphics_a;
+    public static int h;
 
     public bool var_boolean_a = true;
     public int var_int_c; // total width in pixels
@@ -65,10 +71,6 @@ public sealed class TileMap
         return n;
     }
 
-    public void void_a(int viewW, int viewH)
-    {
-        // Image buffer allocation for rendering
-    }
 
     public bool boolean_a(int viewX, int viewY)
     {
@@ -92,10 +94,45 @@ public sealed class TileMap
             {
                 w = 0;
                 x = 0;
+                for (int i = u; i < endU; ++i)
+                {
+                    for (int j = v; j < endV; ++j)
+                    {
+                        c(i, j);
+                    }
+                }
                 return true;
             }
             w = int_a(w + du, y);
             x = int_a(x + dv, z);
+            if (dv > 0)
+            {
+                for (int i = u; i < endU; ++i)
+                {
+                    c(i, endV - 1);
+                }
+            }
+            if (dv < 0)
+            {
+                for (int i = u; i < endU; ++i)
+                {
+                    c(i, v);
+                }
+            }
+            if (du > 0)
+            {
+                for (int i = v; i < endV; ++i)
+                {
+                    c(endU - 1, i);
+                }
+            }
+            if (du < 0)
+            {
+                for (int i = v; i < endV; ++i)
+                {
+                    c(u, i);
+                }
+            }
             return true;
         }
         return false;
@@ -170,6 +207,116 @@ public sealed class TileMap
             var_byte_arr_a[idx] = (byte)dim;
         }
         E = -1000;
+    }
+
+    public void void_a(int n, int n2)
+    {
+        if (var_boolean_a)
+        {
+            int n3 = ((n + (var_int_b >> 1) + 1) >> var_int_a) + 1;
+            int n4 = ((n2 + (var_int_b >> 1) + 1) >> var_int_a) + 1;
+            if (var_javax_microedition_lcdui_Image_b == null)
+            {
+                var_javax_microedition_lcdui_Image_b = Image.CreateImage(n3 * var_int_b, n4 * var_int_b);
+                var_javax_microedition_lcdui_Graphics_a = var_javax_microedition_lcdui_Image_b.GetGraphics();
+            }
+        }
+    }
+
+    public void void_b(int n, int n2)
+    {
+        n += g;
+        if (var_boolean_a)
+        {
+            int n3 = n - (u << var_int_a);
+            int n4 = n2 - (v << var_int_a);
+            int n5 = Math.Min(s, ((y - w) << var_int_a) - n3);
+            int n6 = Math.Min(t, ((z - x) << var_int_a) - n4);
+            int n7 = s - n5;
+            int n8 = t - n6;
+
+            var gr = GMIDlet.var_javax_microedition_lcdui_Graphics_a;
+            if (gr == null || var_javax_microedition_lcdui_Image_b == null) return;
+
+            if (n5 > 0 && n6 > 0)
+            {
+                gr.SetClip(0, 0, n5, n6);
+                gr.DrawImage(var_javax_microedition_lcdui_Image_b, -(n3 + (w << var_int_a)), -(n4 + (x << var_int_a)), 20);
+            }
+            if (n7 > 0 && n6 > 0)
+            {
+                gr.SetClip(n5, 0, n7, n6);
+                gr.DrawImage(var_javax_microedition_lcdui_Image_b, n5, -(n4 + (x << var_int_a)), 20);
+            }
+            if (n5 > 0 && n8 > 0)
+            {
+                gr.SetClip(0, n6, n5, n8);
+                gr.DrawImage(var_javax_microedition_lcdui_Image_b, -(n3 + (w << var_int_a)), n6, 20);
+            }
+            if (n7 > 0 && n8 > 0)
+            {
+                gr.SetClip(n5, n6, n7, n8);
+                gr.DrawImage(var_javax_microedition_lcdui_Image_b, n5, n6, 20);
+            }
+            return;
+        }
+
+        u = n >> var_int_a;
+        v = n2 >> var_int_a;
+        if (u < o) u = o;
+        if (v < p) v = p;
+        if (u > q) u = q;
+        if (v > r) v = r;
+
+        int n9 = u + y;
+        int n10 = v + z;
+        var_javax_microedition_lcdui_Graphics_a = GMIDlet.var_javax_microedition_lcdui_Graphics_a;
+        w = 0;
+        x = 0;
+        int n11 = n - (u << var_int_a);
+        int n12 = n2 - (v << var_int_a);
+        if (GMIDlet.var_javax_microedition_lcdui_Graphics_a == null) return;
+
+        GMIDlet.var_javax_microedition_lcdui_Graphics_a.Translate(-n11, -n12);
+        for (int i = u; i < n9; ++i)
+        {
+            for (int j = v; j < n10; ++j)
+            {
+                c(i, j);
+            }
+        }
+        GMIDlet.var_javax_microedition_lcdui_Graphics_a.Translate(n11, n12);
+    }
+
+    private void c(int n, int n2)
+    {
+        int n3 = int_b(int_a(n, m), int_a(n2, this.n));
+        int n4 = (var_byte_arr_c != null && n3 < var_byte_arr_c.Length) ? (var_byte_arr_c[n3] & 0xC0) : 0;
+        if (!var_boolean_a && n3 == 0) return;
+
+        int n5 = int_a(n - u + w, y) << var_int_a;
+        int n6 = int_a(n2 - v + x, z) << var_int_a;
+        int n7 = n3 - 1;
+        if (n3 == 0) return;
+        if (n3 > 2 && var_int_arr_b != null && n3 - 3 < var_int_arr_b.Length)
+        {
+            n7 = var_int_arr_b[n3 - 3] + 2;
+        }
+
+        int n8 = 0;
+        switch (n4)
+        {
+            case 64: n8 = 2; break;
+            case 128: n8 = 1; break;
+            case 192: n8 = 3; break;
+        }
+
+        if (var_javax_microedition_lcdui_Graphics_a != null && var_javax_microedition_lcdui_Image_a != null && h > 0)
+        {
+            var_javax_microedition_lcdui_Graphics_a.SetClip(n5, n6, var_int_b, var_int_b);
+            var_javax_microedition_lcdui_Graphics_a.DrawRegion(var_javax_microedition_lcdui_Image_a,
+                (n7 % h) << var_int_a, (n7 / h) << var_int_a, var_int_b, var_int_b, n8, n5, n6, 20);
+        }
     }
 
     public void a(int x1, int y1, int x2, int y2)
