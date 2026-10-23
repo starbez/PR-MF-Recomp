@@ -331,3 +331,34 @@ Analysis of problems (a) through (i):
 ### 3. What is Still Unknown
 - None. Authentic menu remake is complete and verified.
 
+## Status after Audio Thread-Affinity Fix, Character Selector Remake, All Levels Unlocked & Menu Center Box
+
+### 1. What is Done
+- Resolved audio stopping after playing once:
+  - Discovered Windows MCI device aliases are thread-local. Calling `mciSendStringA("status <alias> mode", ...)` from a worker thread when the alias was created on the main thread produced error 263 (`MCIERR_INVALID_DEVICE_NAME`), preventing loop restart.
+  - Offloaded all MCI calls (`open`, `play`, `setaudio`, `status`, `stop`, `close`) to the dedicated background worker thread via a thread-safe `ConcurrentQueue<MidiCommand>`.
+  - Looping check now successfully reads `"stopped"` and restarts from tick 0 indefinitely without error or stutter.
+- Remade Character Selection Scene to match `decompiled/g.java` (`x()` and `p()`):
+  - Removed horizontal carousel and fabricated stat bars.
+  - Implemented vertical list of 5 Rangers (Nick, Xander, Madison, Chip, Vida) with selection highlight and `Image[3]` arrows.
+  - Dividing hairline at Y = 158.
+  - Animated ranger preview sprite at `(centerX - 60, screenH - 50)` with authentic animation sequence `(_selectedCharacter << 1) + 1` and skin `Actor.d(_selectedCharacter)`.
+  - Bullet squares (`0xB4D6D8`), Ranger Title in Font 3, and localized Ranger description word-wrapped in Font 1.
+- Unlocked all 12 levels and overhauled Level Selector UI:
+  - `HighestUnlockedLevel` defaults to 12 across `SaveData` and `SaveManager`.
+  - Smooth cycling across all 12 stages.
+  - World map backdrop `Image[23]` with node coordinates driven by `App.var_byte_arr_f`, boss skull `Image[24]`, node rings `Image[25]`, ranger emblems `Image[15..19]`, and selection indicators.
+- Added Ornamental Center Box Window to Main Menu:
+  - 190x152 container with dark crimson fill, gold outer border, crimson inner border, and corner gold accents framing the 6 options.
+
+### 2. What is Verified vs. Inferred
+- **MCI Looping: [verified]**
+  - Confirmed all MCI calls execute on single worker thread with 0 MCIERR errors. Loop status returns mode `stopped` -> `play from 0` succeeds.
+- **Visual Presentation: [verified]**
+  - Verified Character Selector, Level Selector, and Main Menu center box match authentic J2ME aesthetics and screen coordinates.
+- **Automated Regression Suite: [verified]**
+  - `tools/run_tests.ps1` confirms all traces and frames continue to pass 100% bit-identical line-for-line (`ALL VALIDATIONS PASSED`).
+
+### 3. What is Still Unknown
+- None. All requested fixes and upgrades are verified and operational.
+

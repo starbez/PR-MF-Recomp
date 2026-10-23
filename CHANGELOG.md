@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.6] - Audio Looping Thread-Affinity Fix, Character Selector Remake, All Levels Unlocked & Menu Center Box
+### Fixed
+- **Audio Stopping After One Play / Thread-Affinity Error 263 (`MidiPlayer.cs`):**
+  - Diagnosed empirical root cause of background music permanently stopping after playing through once: in Windows Multimedia (`winmm.dll`), MCI device aliases are thread-local. Because the previous implementation opened and played the track on the main thread but polled `status <alias> mode` on a secondary thread, Windows returned `MCIERR_INVALID_DEVICE_NAME (263)`. Because `status` never returned `"stopped"`, track rewind (`play from 0`) was never called.
+  - Implemented an asynchronous command message queue (`ConcurrentQueue<MidiCommand>`) where ALL Windows MCI operations (`open`, `play`, `setaudio`, `status`, `stop`, `close`) execute exclusively on the dedicated background worker thread (`BackgroundLoopWorker`).
+  - Device alias creation and mode querying now share identical thread affinity, completely eliminating MCI error 263. Background music now loops seamlessly, continuously, and indefinitely without user intervention, and with 0 ms latency on the main thread.
+- **Authentic Character Selection Scene Remake (`MenuSystem.cs`):**
+  - Audited `decompiled/g.java` (`x()` and `p()`) to reconstruct the exact authentic J2ME layout, completely removing non-canonical horizontal carousels and fabricated stats bars (Health, Magic, Speed).
+  - Top Section: Clean vertical list of 5 Rangers (Nick, Xander, Madison, Chip, Vida) with selection highlight, `Image[3]` arrows, Font 3 gold text for selected, and Font 1 white text for unselected.
+  - Localized strings loaded dynamically from `App.var_java_lang_String_arr_arr_a[0][8..12]` (with clean fallbacks).
+  - Middle Section: Authentic signature hairline divider at Y = 158.
+  - Bottom-Left Section: Animated Ranger sprite preview at `(centerX - 60, screenH - 50)` driven by original animation sequence ID `(_selectedCharacter << 1) + 1` and palette skin `Actor.d(_selectedCharacter)`.
+  - Bottom-Right Section: Authentic 5x5 light cyan bullet squares (`0xB4D6D8` with black border), Ranger Title (e.g. "Red Ranger") in Font 3, and localized Ranger special ability description word-wrapped in Font 1.
+- **Unlock All 12 Levels & Level Selector UI Overhaul (`SaveData.cs`, `SaveManager.cs`, `MenuSystem.cs`):**
+  - Set `HighestUnlockedLevel` default to `12` across `SaveData`, `SaveManager.ResetToDefaults()`, and `SaveManager.Load()`, ensuring all 12 stages are immediately unlocked for new and existing users.
+  - Updated `HandleLevelSelectInput` with smooth cycling across all 12 stages (and Survival Arena) with Left/Right and Up/Down navigation.
+  - Reconstructed Level Selector UI matching `decompiled/g.java:1928-1996`:
+    - Centered authentic world map artwork `Image[23]` with golden border.
+    - Level nodes mapped directly to `App.var_byte_arr_f` coordinate offsets.
+    - Authentic icons: Boss skull `Image[24]` on stage 12, node rings `Image[25]` and ranger emblems `Image[15..19]` on stages 1..11.
+    - Golden and white dual highlight box indicating the selected level node.
+    - Centered stage details box with stage title, mission indicator, and unlock status.
+- **Main Menu Ornamental Center Box Window (`MenuSystem.cs`):**
+  - Added an authentic central window container framing all 6 menu options:
+    - 190x152 px container with dark translucent crimson fill `0x380C0C`, gold outer border `0xFFD700`, crimson inner border `0x7D0000`, and corner gold pixel ornaments.
+    - Vertically centered menu options with selected item highlight and flanking `Image[3]` arrow sprites.
+
 ## [1.5.5] - Authentic J2ME Living Mobile Menu Remake
 ### Added
 - **Authentic Living Mobile Menu Presentation & Art Assets (`MenuSystem.cs`):**

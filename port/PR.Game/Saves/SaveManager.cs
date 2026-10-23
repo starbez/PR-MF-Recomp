@@ -16,7 +16,7 @@ public sealed class SaveData
     public bool Widescreen { get; set; } = true;  // Default Widescreen
     public bool FitScaling { get; set; } = false; // Default Integer scaling
     public int SelectedCharacter { get; set; } = 0; // 0..4
-    public int HighestUnlockedLevel { get; set; } = 1;
+    public int HighestUnlockedLevel { get; set; } = 12;
 
     public int[] StoryHighScores { get; set; } = new int[5] { 50000, 40000, 30000, 20000, 10000 };
     public string[] StoryHighScoreNames { get; set; } = new string[5] { "RED", "YEL", "BLU", "PNK", "GRN" };
@@ -64,6 +64,9 @@ public sealed class SaveManager
                     if (loaded.SurvivalHighScoreNames == null || loaded.SurvivalHighScoreNames.Length != 5)
                         loaded.SurvivalHighScoreNames = new string[5] { "NICK", "CHIP", "MADI", "VIDA", "XAND" };
 
+                    if (loaded.HighestUnlockedLevel < 12)
+                        loaded.HighestUnlockedLevel = 12;
+
                     return loaded;
                 }
             }
@@ -100,6 +103,7 @@ public sealed class SaveManager
         Data.Smooth60Fps = true;
         Data.Widescreen = true;
         Data.FitScaling = false;
+        Data.HighestUnlockedLevel = 12;
         Save();
     }
 

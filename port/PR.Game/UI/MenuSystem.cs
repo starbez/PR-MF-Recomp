@@ -55,14 +55,14 @@ public sealed class MenuSystem
     private bool _returnToPause = false;
     private int _rebindingAction = -1;
 
-    private static readonly string[] RangerNames = { "NICK (RED)", "CHIP (YELLOW)", "MADISON (BLUE)", "VIDA (PINK)", "XANDER (GREEN)" };
-    private static readonly string[] RangerElements = { "FIRE / BALANCED", "LIGHTNING / SPEED", "WATER / MAGIC", "WIND / AGILITY", "EARTH / STRENGTH" };
+    private static readonly string[] RangerNames = { "Nick", "Xander", "Madison", "Chip", "Vida" };
+    private static readonly string[] RangerTitles = { "Red Ranger", "Green Ranger", "Blue Ranger", "Yellow Ranger", "Pink Ranger" };
     private static readonly string[] RangerDescriptionsFallback = {
-        "His fireballs destroy enemies and walls.",
-        "Can electrocute enemies and run devices.",
-        "Her watery double confuses or deluges.",
-        "She can roll through enemies or narrow spots.",
-        "Can open a way or paralyze by sprouting."
+        "His fireballs destroy enemies and walls",
+        "Can open a way or paralyze by sprouting",
+        "Her watery double confuses or deluges",
+        "Can electrocute enemies and run devices",
+        "She can roll through enemies or narrow spots"
     };
 
     private static readonly string[] StageNames = {
@@ -341,11 +341,11 @@ public sealed class MenuSystem
         int maxLvl = Math.Min(12, Math.Max(1, _saveManager.Data.HighestUnlockedLevel));
         if (key == -3 || key == -1) // LEFT/UP
         {
-            _selectedLevel = Math.Max(1, _selectedLevel - 1);
+            _selectedLevel = (_selectedLevel <= 1) ? maxLvl : _selectedLevel - 1;
         }
         else if (key == -4 || key == -2) // RIGHT/DOWN
         {
-            _selectedLevel = Math.Min(maxLvl, _selectedLevel + 1);
+            _selectedLevel = (_selectedLevel >= maxLvl) ? 1 : _selectedLevel + 1;
         }
         else if (key == -5 || key == -6 || key == 53) // START LEVEL
         {
@@ -910,6 +910,26 @@ public sealed class MenuSystem
             DrawDivider(gr, 40, screenW);
         }
 
+        // Ornamental Center Box Window framing the menu options
+        int boxW = 190;
+        int boxH = 152;
+        int boxX = centerX - (boxW / 2);
+        int boxY = 126;
+
+        gr.SetColor(0x380C0C);
+        gr.FillRect(boxX, boxY, boxW, boxH);
+        gr.SetColor(0xFFD700);
+        gr.DrawRect(boxX, boxY, boxW - 1, boxH - 1);
+        gr.SetColor(0x7D0000);
+        gr.DrawRect(boxX + 1, boxY + 1, boxW - 3, boxH - 3);
+
+        // Corner golden accents
+        gr.SetColor(0xFFEA80);
+        gr.FillRect(boxX + 2, boxY + 2, 2, 2);
+        gr.FillRect(boxX + boxW - 4, boxY + 2, 2, 2);
+        gr.FillRect(boxX + 2, boxY + boxH - 4, 2, 2);
+        gr.FillRect(boxX + boxW - 4, boxY + boxH - 4, 2, 2);
+
         string[] items = {
             "STORY MODE",
             "SURVIVAL MODE",
@@ -919,17 +939,17 @@ public sealed class MenuSystem
             "EXIT"
         };
 
-        int startY = 135;
-        const int itemH = 25;
+        int startY = boxY + 14;
+        const int itemH = 22;
         for (int i = 0; i < items.Length; i++)
         {
             int y = startY + i * itemH;
             bool sel = i == _menuIndex;
             if (sel)
             {
-                DrawSelectionHighlight(gr, centerX - 85, y - 2, 170, 20);
-                DrawArrow(gr, centerX - 94, y + 2, isRight: false);
-                DrawArrow(gr, centerX + 88, y + 2, isRight: true);
+                DrawSelectionHighlight(gr, boxX + 8, y - 2, boxW - 16, 18);
+                DrawArrow(gr, boxX + 14, y + 2, isRight: false);
+                DrawArrow(gr, boxX + boxW - 24, y + 2, isRight: true);
                 GMIDlet.a(3, items[i], centerX, y, 17);
             }
             else
@@ -939,27 +959,50 @@ public sealed class MenuSystem
         }
     }
 
-    private string GetRangerDescription(int rangerIdx)
+    private static string GetRangerName(int rangerIdx)
     {
         try
         {
             if (App.var_java_lang_String_arr_arr_a != null &&
                 App.var_java_lang_String_arr_arr_a.Length > 0 &&
-                App.var_java_lang_String_arr_arr_a[0] != null)
+                App.var_java_lang_String_arr_arr_a[0] != null &&
+                (8 + rangerIdx) < App.var_java_lang_String_arr_arr_a[0].Length)
             {
-                int descIdx = rangerIdx switch
-                {
-                    0 => 18, // Nick
-                    1 => 21, // Chip
-                    2 => 20, // Madison
-                    3 => 22, // Vida
-                    4 => 19, // Xander
-                    _ => 18
-                };
-                if (descIdx < App.var_java_lang_String_arr_arr_a[0].Length)
-                {
-                    return App.var_java_lang_String_arr_arr_a[0][descIdx];
-                }
+                return App.var_java_lang_String_arr_arr_a[0][8 + rangerIdx];
+            }
+        }
+        catch { }
+
+        return RangerNames[Math.Clamp(rangerIdx, 0, 4)];
+    }
+
+    private static string GetRangerTitle(int rangerIdx)
+    {
+        try
+        {
+            if (App.var_java_lang_String_arr_arr_a != null &&
+                App.var_java_lang_String_arr_arr_a.Length > 0 &&
+                App.var_java_lang_String_arr_arr_a[0] != null &&
+                (13 + rangerIdx) < App.var_java_lang_String_arr_arr_a[0].Length)
+            {
+                return App.var_java_lang_String_arr_arr_a[0][13 + rangerIdx];
+            }
+        }
+        catch { }
+
+        return RangerTitles[Math.Clamp(rangerIdx, 0, 4)];
+    }
+
+    private static string GetRangerDescription(int rangerIdx)
+    {
+        try
+        {
+            if (App.var_java_lang_String_arr_arr_a != null &&
+                App.var_java_lang_String_arr_arr_a.Length > 0 &&
+                App.var_java_lang_String_arr_arr_a[0] != null &&
+                (18 + rangerIdx) < App.var_java_lang_String_arr_arr_a[0].Length)
+            {
+                return App.var_java_lang_String_arr_arr_a[0][18 + rangerIdx];
             }
         }
         catch { }
@@ -972,32 +1015,41 @@ public sealed class MenuSystem
         DrawOGMenuFrame(gr, screenW, screenH, "SELECT", "BACK", drawWatermark: false);
         int centerX = screenW >> 1;
 
-        // Header
+        // Header Title
         GMIDlet.a(3, "CHOOSE RANGER", centerX, 14, 17);
         DrawDivider(gr, 30, screenW);
 
-        // Ranger Name with selector arrows
-        string rangerName = RangerNames[_selectedCharacter];
-        int nameW = GMIDlet.a(3, rangerName);
-        GMIDlet.a(3, rangerName, centerX, 36, 17);
-        DrawArrow(gr, centerX - (nameW / 2) - 14, 38, isRight: false);
-        DrawArrow(gr, centerX + (nameW / 2) + 8, 38, isRight: true);
-        GMIDlet.a(0, RangerElements[_selectedCharacter], centerX, 54, 17);
-        DrawDivider(gr, 68, screenW);
+        // Top Menu: Vertical list of the 5 Rangers (Nick, Xander, Madison, Chip, Vida)
+        int startY = 38;
+        const int itemH = 22;
+        int boxW = 180;
+        int boxX = centerX - (boxW / 2);
 
-        // Word-wrapped Ranger description
-        string desc = GetRangerDescription(_selectedCharacter);
-        string[] descLines = GMIDlet.WordWrap(desc, 195, 1);
-        for (int i = 0; i < descLines.Length; i++)
+        for (int i = 0; i < 5; i++)
         {
-            GMIDlet.a(1, descLines[i], centerX, 76 + i * 16, 17);
+            int y = startY + i * itemH;
+            bool sel = i == _selectedCharacter;
+            string name = GetRangerName(i);
+
+            if (sel)
+            {
+                DrawSelectionHighlight(gr, boxX + 10, y - 2, boxW - 20, 18);
+                DrawArrow(gr, boxX + 16, y + 2, isRight: false);
+                DrawArrow(gr, boxX + boxW - 26, y + 2, isRight: true);
+                GMIDlet.a(3, name, centerX, y, 17);
+            }
+            else
+            {
+                GMIDlet.a(1, name, centerX, y, 17);
+            }
         }
 
-        DrawDivider(gr, 126, screenW);
+        // Middle signature hairline divider at Y = 158
+        DrawDivider(gr, 158, screenW);
 
-        // Character Sprite Preview
-        int previewX = centerX - 55;
-        int previewY = 240;
+        // Bottom Left: Animated Ranger sprite preview
+        int previewX = centerX - 60;
+        int previewY = screenH - 50;
         if (_characterPreviews[_selectedCharacter] == null)
         {
             try
@@ -1007,7 +1059,8 @@ public sealed class MenuSystem
                 preview.d(_selectedCharacter);
                 preview.var_int_d = previewX;
                 preview.var_int_e = previewY;
-                preview.a(1, false);
+                int animId = (_selectedCharacter << 1) + 1;
+                preview.a(animId, false);
                 preview.InterpState.Snap(previewX, previewY);
                 preview.RenderX = previewX;
                 preview.RenderY = previewY;
@@ -1023,34 +1076,42 @@ public sealed class MenuSystem
             actor.var_int_e = previewY;
             actor.RenderX = previewX;
             actor.RenderY = previewY;
+            int animId = (_selectedCharacter << 1) + 1;
+            if (actor.x != animId)
+            {
+                actor.a(animId, false);
+            }
             actor.a(0, 0);
         }
 
-        // Stat Bars on the right
-        int statX = centerX + 2;
-        int barW = 55;
+        // Bottom Right: Ranger Title & Description with authentic bullet squares
+        int infoX = centerX - 8;
+        int titleY = 170;
+        string title = GetRangerTitle(_selectedCharacter);
 
-        GMIDlet.a(0, "HEALTH:", statX, 145, 20);
-        RenderStatBar(gr, statX + 46, 148, barW, (_selectedCharacter == 4 ? 100 : 75 + _selectedCharacter * 5));
+        // Bullet square next to Title: 5x5 filled with light cyan 0xB4D6D8 with black border
+        gr.SetColor(0xB4D6D8);
+        gr.FillRect(infoX - 8, titleY + 4, 5, 5);
+        gr.SetColor(0x000000);
+        gr.DrawRect(infoX - 8, titleY + 4, 5, 5);
 
-        GMIDlet.a(0, "MAGIC:", statX, 175, 20);
-        RenderStatBar(gr, statX + 46, 178, barW, (_selectedCharacter == 2 ? 100 : 60 + (4 - _selectedCharacter) * 8));
+        GMIDlet.a(3, title, infoX, titleY, 20);
 
-        GMIDlet.a(0, "SPEED:", statX, 205, 20);
-        RenderStatBar(gr, statX + 46, 208, barW, (_selectedCharacter == 1 || _selectedCharacter == 3 ? 100 : 70));
+        // Bullet square next to Description
+        int descY = titleY + 18;
+        gr.SetColor(0xB4D6D8);
+        gr.FillRect(infoX - 8, descY + 4, 5, 5);
+        gr.SetColor(0x000000);
+        gr.DrawRect(infoX - 8, descY + 4, 5, 5);
+
+        string desc = GetRangerDescription(_selectedCharacter);
+        string[] descLines = GMIDlet.WordWrap(desc, screenW - infoX - 18, 1);
+        for (int i = 0; i < descLines.Length && i < 4; i++)
+        {
+            GMIDlet.a(1, descLines[i], infoX, descY + i * 15, 20);
+        }
 
         DrawDivider(gr, 272, screenW);
-    }
-
-    private static void RenderStatBar(Graphics gr, int x, int y, int maxW, int percent)
-    {
-        int curW = maxW * percent / 100;
-        gr.SetColor(0x300000);
-        gr.FillRect(x, y, maxW, 8);
-        gr.SetColor(0x00FF88);
-        gr.FillRect(x, y, curW, 8);
-        gr.SetColor(0xFFD700);
-        gr.DrawRect(x, y, maxW - 1, 7);
     }
 
     private void RenderLevelSelect(Graphics gr, int screenW, int screenH)
@@ -1070,37 +1131,105 @@ public sealed class MenuSystem
         DrawArrow(gr, centerX + (lvlW / 2) + 8, 40, isRight: true);
 
         // Stage details box
+        int boxW = 190;
+        int boxH = 46;
+        int boxX = centerX - (boxW / 2);
         gr.SetColor(0x280808);
-        gr.FillRect(centerX - 95, 62, 190, 75);
+        gr.FillRect(boxX, 58, boxW, boxH);
         gr.SetColor(0xFFD700);
-        gr.DrawRect(centerX - 95, 62, 189, 74);
+        gr.DrawRect(boxX, 58, boxW - 1, boxH - 1);
+        gr.SetColor(0x7D0000);
+        gr.DrawRect(boxX + 1, 59, boxW - 3, boxH - 3);
 
         string stageName = _selectedLevel <= 13 ? StageNames[_selectedLevel - 1] : "MYSTIC REALM";
-        GMIDlet.a(3, stageName, centerX, 74, 17);
-        GMIDlet.a(1, _selectedLevel == 13 ? "DEFEAT ALL WAVES!" : $"MISSION LEVEL {_selectedLevel}", centerX, 94, 17);
-        GMIDlet.a(0, $"UNLOCKED: {maxLvl}/12", centerX, 114, 17);
+        GMIDlet.a(3, stageName, centerX, 64, 17);
+        GMIDlet.a(1, _selectedLevel == 13 ? "DEFEAT ALL WAVES!" : $"MISSION LEVEL {_selectedLevel}  -  UNLOCKED: 12/12", centerX, 84, 17);
 
         // World Map Artwork Image[23] if available
         var images = GMIDlet.var_javax_microedition_lcdui_Image_arr_a;
         CoreImage? mapArt = (images != null && images.Length > 23) ? images[23] : null;
         if (mapArt != null)
         {
-            gr.DrawImage(mapArt, centerX, 145, 17);
+            int mapY = 114;
+            gr.DrawImage(mapArt, centerX, mapY, 17);
 
-            // Level node highlight ring
+            // Draw ornamental frame around the world map
+            int mapW = mapArt.Width;
+            int mapH = mapArt.Height;
+            int mapLeft = centerX - (mapW >> 1);
             gr.SetColor(0xFFD700);
-            int nodeX = centerX - 60 + ((_selectedLevel - 1) % 4) * 40;
-            int nodeY = 165 + ((_selectedLevel - 1) / 4) * 28;
-            gr.DrawRect(nodeX - 4, nodeY - 4, 8, 8);
+            gr.DrawRect(mapLeft - 1, mapY - 1, mapW + 1, mapH + 1);
+
+            // Render level nodes
+            for (int i = 0; i < 12; i++)
+            {
+                int nodeX;
+                int nodeY;
+                if (App.var_byte_arr_f != null && App.var_byte_arr_f.Length >= (i * 2 + 2))
+                {
+                    nodeX = centerX + App.var_byte_arr_f[i * 2];
+                    nodeY = mapY + 17 + App.var_byte_arr_f[i * 2 + 1];
+                }
+                else
+                {
+                    nodeX = centerX - 45 + (i % 4) * 30;
+                    nodeY = mapY + 15 + (i / 4) * 20;
+                }
+
+                bool isSelected = (_selectedLevel - 1) == i;
+
+                if (i == 11) // Boss level
+                {
+                    CoreImage? bossImg = (images != null && images.Length > 24) ? images[24] : null;
+                    if (bossImg != null)
+                    {
+                        gr.DrawImage(bossImg, nodeX, nodeY, 17);
+                    }
+                    else
+                    {
+                        gr.SetColor(0xFF0000);
+                        gr.FillRect(nodeX - 3, nodeY - 3, 6, 6);
+                    }
+                }
+                else
+                {
+                    // Ring Image[25]
+                    CoreImage? ringImg = (images != null && images.Length > 25) ? images[25] : null;
+                    if (ringImg != null)
+                    {
+                        gr.DrawImage(ringImg, nodeX - 4, nodeY - 7, 20);
+                    }
+                    // Ranger emblem
+                    int iconIdx = 15 + (i % 5);
+                    CoreImage? rangerIcon = (images != null && images.Length > iconIdx) ? images[iconIdx] : null;
+                    if (rangerIcon != null)
+                    {
+                        gr.DrawImage(rangerIcon, nodeX, nodeY, 36);
+                    }
+                    else
+                    {
+                        gr.SetColor(0x00FF88);
+                        gr.FillRect(nodeX - 2, nodeY - 2, 4, 4);
+                    }
+                }
+
+                if (isSelected)
+                {
+                    gr.SetColor(0xFFD700);
+                    gr.DrawRect(nodeX - 6, nodeY - 6, 12, 12);
+                    gr.SetColor(0xFFFFFF);
+                    gr.DrawRect(nodeX - 7, nodeY - 7, 14, 14);
+                }
+            }
         }
         else
         {
             gr.SetColor(0x180004);
-            gr.FillRect(centerX - 95, 145, 190, 115);
+            gr.FillRect(centerX - 95, 114, 190, 145);
             gr.SetColor(0xFFD700);
-            gr.DrawRect(centerX - 95, 145, 189, 114);
-            GMIDlet.a(1, "WORLD MAP", centerX, 185, 17);
-            GMIDlet.a(0, "USE ARROWS TO CHOOSE STAGE", centerX, 210, 17);
+            gr.DrawRect(centerX - 95, 114, 189, 144);
+            GMIDlet.a(1, "WORLD MAP", centerX, 175, 17);
+            GMIDlet.a(0, "USE ARROWS TO CHOOSE STAGE", centerX, 205, 17);
         }
 
         DrawDivider(gr, 272, screenW);
