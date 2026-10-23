@@ -56,6 +56,7 @@ public sealed class MenuSystem
 
     private static readonly string[] RangerNames = { "NICK (RED)", "CHIP (YELLOW)", "MADISON (BLUE)", "VIDA (PINK)", "XANDER (GREEN)" };
     private static readonly string[] RangerElements = { "FIRE / BALANCED", "LIGHTNING / SPEED", "WATER / MAGIC", "WIND / AGILITY", "EARTH / STRENGTH" };
+    private readonly Actor?[] _characterPreviews = new Actor?[5];
 
     public MenuSystem(
         App app,
@@ -757,6 +758,31 @@ public sealed class MenuSystem
 
         GMIDlet.a(0, "SPEED:", 35, 185, 20);
         RenderStatBar(gr, 95, 188, 100, (_selectedCharacter == 1 || _selectedCharacter == 3 ? 100 : 70));
+
+        // Character Sprite Preview
+        if (_characterPreviews[_selectedCharacter] == null)
+        {
+            try
+            {
+                var preview = App.a_a(0);
+                preview.w = _selectedCharacter;
+                preview.d(_selectedCharacter);
+                preview.var_int_d = 120;
+                preview.var_int_e = 275;
+                preview.a(1, false);
+                preview.InterpState.Snap(120, 275);
+                preview.RenderX = 120;
+                preview.RenderY = 275;
+                _characterPreviews[_selectedCharacter] = preview;
+            }
+            catch { }
+        }
+
+        var actor = _characterPreviews[_selectedCharacter];
+        if (actor != null)
+        {
+            actor.a(0, 0);
+        }
 
         GMIDlet.a(0, "SELECT: ENTER", 6, 304, 20);
         GMIDlet.a(0, "BACK: ESC", 234, 304, 24);

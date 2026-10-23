@@ -294,7 +294,7 @@ public static class Program
     {
         Console.WriteLine($"[Widescreen Debug] Starting capture of all 9 widescreen frames to {targetDir}...");
         EngineTweaks.Widescreen = true;
-        EngineTweaks.Smooth60Fps = false;
+        EngineTweaks.Smooth60Fps = true;
 
         string outDir = Path.Combine(Directory.GetCurrentDirectory(), "frames", targetDir);
         Directory.CreateDirectory(outDir);
@@ -462,7 +462,7 @@ public static class Program
     {
         Console.WriteLine("[Widescreen Playthrough] Starting 2-level automated playthrough with widescreen ON...");
         EngineTweaks.Widescreen = true;
-        EngineTweaks.Smooth60Fps = false;
+        EngineTweaks.Smooth60Fps = true;
 
         int renderW = EngineTweaks.RenderWidth;
         int renderH = EngineTweaks.RenderHeight;
@@ -507,6 +507,7 @@ public static class Program
                 else game.b(-5);
 
                 game.boolean_b();
+                game.UpdateInterpolation(0.5f);
                 game.d();
 
                 // Check camera clamping
@@ -543,5 +544,62 @@ public static class Program
             }
         }
         Console.WriteLine("\n[Widescreen Playthrough] Verification complete!");
+    }
+
+    private static void TestCharacterVisibility(IResourceProvider res)
+    {
+        Console.WriteLine("[Test] Checking player character visibility across modes...");
+        var saveManager = new SaveManager();
+        var app = new App(res);
+        app.m();
+
+        foreach (bool widescreen in new[] { false, true })
+        {
+            foreach (bool smooth in new[] { false, true })
+            {
+                EngineTweaks.Widescreen = widescreen;
+                EngineTweaks.Smooth60Fps = smooth;
+                int renderW = EngineTweaks.RenderWidth;
+                int renderH = EngineTweaks.RenderHeight;
+                var screen = PR.Core.Graphics.Image.CreateImage(renderW, renderH);
+                GMIDlet.var_javax_microedition_lcdui_Graphics_a = screen.GetGraphics();
+
+                CoreGame.G = 1;
+                CoreGame.F = 0; // Red Ranger
+                CoreGame.var_boolean_e = false;
+                CoreGame.var_java_util_Random_a = new JavaRandom(42L);
+                var game = new CoreGame(app);
+                CoreGame.var_f_a = game;
+                app.var_f_a = game;
+                game.e();
+
+                // Run 2 ticks with interpolation
+                game.boolean_b();
+                game.UpdateInterpolation(0.5f);
+                game.boolean_b();
+                game.UpdateInterpolation(0.5f);
+                game.d();
+
+                // Count red ranger pixels
+                int redCount = 0;
+                foreach (uint p in screen.Pixels)
+                {
+                    uint r = (p >> 16) & 0xFF;
+                    uint g = (p >> 8) & 0xFF;
+                    uint b = p & 0xFF;
+                    if (r > 180 && g < 70 && b < 70) redCount++;
+                }
+
+                Console.WriteLine($"Mode: Widescreen={widescreen}, Smooth60={smooth} -> Player pos: ({CoreGame.var_a_f!.var_int_d}, {CoreGame.var_a_f.var_int_e}), RenderPos: ({CoreGame.var_a_f.RenderX}, {CoreGame.var_a_f.RenderY}), RedPixels: {redCount}");
+                if (redCount > 0)
+                {
+                    Console.WriteLine("  PASS: Player character is VISIBLE!");
+                }
+                else
+                {
+                    Console.WriteLine("  FAIL: Player character is INVISIBLE!");
+                }
+            }
+        }
     }
 }

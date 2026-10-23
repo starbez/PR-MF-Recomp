@@ -253,6 +253,9 @@ public sealed class Game
             CamInterpState.Snap(ac, ad);
             RenderCamX = ac;
             RenderCamY = ad;
+            var_a_f.InterpState.Snap(var_a_f.var_int_d, var_a_f.var_int_e);
+            var_a_f.RenderX = var_a_f.var_int_d;
+            var_a_f.RenderY = var_a_f.var_int_e;
         }
         O = 0;
         P = 0;
@@ -727,6 +730,9 @@ public sealed class Game
             var_a_f.t = 0;
             var_a_f.a(1, false);
             var_a_f.var_int_c = 1;
+            var_a_f.InterpState.Snap(var_a_f.var_int_d, var_a_f.var_int_e);
+            var_a_f.RenderX = var_a_f.var_int_d;
+            var_a_f.RenderY = var_a_f.var_int_e;
 
             if (var_a_f.s == var_int_n)
             {
@@ -1418,6 +1424,47 @@ public sealed class Game
 
             CamInterpState.Update(ac, ad);
 
+            if (var_a_f != null)
+            {
+                var_a_f.InterpState.Update(var_a_f.var_int_d, var_a_f.var_int_e);
+            }
+
+            if (var_a_arr_g != null)
+            {
+                for (int i = 0; i < var_a_arr_g.Length; i++)
+                {
+                    var enemy = var_a_arr_g[i];
+                    if (enemy != null && enemy.var_boolean_a)
+                    {
+                        enemy.InterpState.Update(enemy.var_int_d, enemy.var_int_e);
+                    }
+                }
+            }
+
+            if (var_a_arr_b != null)
+            {
+                for (int i = 0; i < M; i++)
+                {
+                    var proj = var_a_arr_b[i];
+                    if (proj != null && proj.var_boolean_a)
+                    {
+                        proj.InterpState.Update(proj.var_int_d, proj.var_int_e);
+                    }
+                }
+            }
+
+            if (var_a_arr_a != null)
+            {
+                for (int i = 0; i < var_a_arr_a.Length; i++)
+                {
+                    var plat = var_a_arr_a[i];
+                    if (plat != null && plat.var_boolean_a)
+                    {
+                        plat.InterpState.Update(plat.var_int_d, plat.var_int_e);
+                    }
+                }
+            }
+
             for (int i = 0; i < ai; ++i)
             {
                 int lx = var_c_arr_a[i].i * (ac - (var_int_c / 2)) / 10;
@@ -1425,7 +1472,7 @@ public sealed class Game
                 var_c_arr_a[i].boolean_a(lx, ly);
             }
 
-            if (var_a_f.var_boolean_e)
+            if (var_a_f != null && var_a_f.var_boolean_e)
             {
                 a(false);
             }

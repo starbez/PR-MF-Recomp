@@ -247,8 +247,8 @@ public sealed class Actor
             return false;
         }
 
-        int posX = EngineTweaks.Smooth60Fps ? RenderX : var_int_d;
-        int posY = EngineTweaks.Smooth60Fps ? RenderY : var_int_e;
+        int posX = (EngineTweaks.Smooth60Fps && InterpState.Initialized) ? RenderX : var_int_d;
+        int posY = (EngineTweaks.Smooth60Fps && InterpState.Initialized) ? RenderY : var_int_e;
         int n3 = n + posX;
         int n4 = n2 + posY;
         var_int_b = int_a();
