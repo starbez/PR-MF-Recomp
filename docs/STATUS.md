@@ -403,4 +403,33 @@ Analysis of problems (a) through (i):
 ### 3. What is Still Unknown
 - None. All 6 requested features and fixes are verified and operational.
 
+## Status after Seamless Next-Level Progression & From-Scratch Level Selector Remake
+
+### 1. What is Done
+- Resolved level completion booting player back to title:
+  - Added `Game.LevelWon` flag set when `a(bool win)` is called.
+  - In `MenuSystem.Update`, when a story level completes with `LevelWon == true`:
+    - Automatically updates highest unlocked stage in save data.
+    - If stage < 12, automatically transitions into the next level (`finishedLevel + 1`) via `StartGame()` while preserving accumulated score.
+    - If stage == 12 (final boss defeated), transitions to the Victory screen.
+  - Enhanced Game Over screen to support instant stage retry ("PRESS ENTER: RETRY MISSION") instead of booting players out to the title screen.
+- Remade Level Selector UI completely from scratch:
+  - Replaced low-res texture-based world map with a responsive, modern mission selection matrix:
+    - 3x4 interactive card matrix for Stages 1 through 12 + full-width Survival Arena bar.
+    - Clear visual indicators for Locked, Unlocked, and Active/Selected stages.
+    - Tactical Mission Dossier container displaying stage title, 2-line briefing, deployment readiness badge, active Ranger operative, and controls hint.
+    - 2D grid navigation with D-Pad, Analog Stick, Arrow keys, and direct mouse selection/activation.
+
+### 2. What is Verified vs. Inferred
+- **Level Chaining & Progression: [verified]**
+  - Verified `boolean_b()` completion triggers seamless transition to next stage without state resetting or returning to Title/GameOver.
+- **Mission Selector Layout: [verified]**
+  - Confirmed 3x4 grid + Survival bar + Dossier box layout renders cleanly with zero texture scaling artifacts in both 4:3 and 16:9 widescreen viewports.
+- **Automated Regression Suite: [verified]**
+  - `tools/run_tests.ps1` confirms all traces and frames pass 100% bit-identical line-for-line (`ALL VALIDATIONS PASSED`).
+
+### 3. What is Still Unknown
+- None. Seamless stage progression and from-scratch level selector are verified and operational.
+
+
 

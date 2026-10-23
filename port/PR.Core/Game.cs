@@ -108,6 +108,7 @@ public sealed class Game
     public bool var_boolean_n;
     public bool var_boolean_o;
     public bool var_boolean_p = false; // Level completed
+    public bool LevelWon { get; set; } = false;
     public bool[] var_boolean_arr_b = new bool[9];
     public bool var_boolean_q = false;
     public bool var_boolean_b;
@@ -2803,6 +2804,7 @@ public sealed class Game
 
     public void a(bool win)
     {
+        LevelWon = win;
         if (win && G >= H && G < D)
         {
             H = G + 1;

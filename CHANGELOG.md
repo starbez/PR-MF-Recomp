@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.8] - Seamless Next-Level Progression & From-Scratch Level Selector Remake
+### Added
+- **From-Scratch Mission Selector & Stage Dossier (`MenuSystem.cs`):**
+  - Completely redesigned the Level Selector UI from scratch, replacing low-resolution texture map positioning with a clean, responsive vector-rendered mission selection matrix:
+    - **3x4 Mission Matrix:** Displays Stages 1 through 12 as interactive cards with distinct visual styling for Locked (dim charred outline with lock badge), Unlocked (rich crimson with muted gold frame), and Active (glowing dual gold/white highlight).
+    - **Survival Arena Bar:** Dedicated full-width arena button for instant access to endless combat mode.
+    - **Tactical Mission Dossier Box:** Features stage title, 2-line narrative briefing and tactical objectives, deployment readiness status pill ("READY TO DEPLOY" vs "LOCKED"), active Ranger operative indicator, and deployment controls.
+    - **Seamless Input:** Full 2D D-Pad / Analog Stick / Arrow key navigation, plus direct mouse-click selection and double-click/deploy activation.
+
+### Fixed
+- **Seamless Story Level Advancement (`Game.cs`, `MenuSystem.cs`):**
+  - Diagnosed empirical root cause of stage completion kicking players back to the title screen: `MenuSystem.Update` previously treated all level completion states as game termination (`State = GameState.GameOver`).
+  - Added `Game.LevelWon` tracking to differentiate between stage victories (`a(true)`) and player defeats (`a(false)`).
+  - Upon completing any story stage (1 through 11), `MenuSystem` updates progression (`_saveManager.Data.HighestUnlockedLevel`), advances `_selectedLevel = finishedLevel + 1`, and automatically launches the next level with accumulated score intact via `StartGame()`.
+  - Stage 12 completion now correctly transitions to the game Victory screen.
+  - Game Over screen now supports immediate stage retry ("ENTER: RETRY MISSION") without dumping the player back to the title screen.
+
 ## [1.5.7] - World Map Alignment, Debug & Cheats Menu, Screen Shake Fix, Controller Support, Authentic Progression & Arbitrary FPS
 ### Added
 - **Debug & Cheats Submenu (`MenuSystem.cs`, `EngineTweaks.cs`, `SaveManager.cs`):**

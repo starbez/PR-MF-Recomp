@@ -66,13 +66,23 @@ public sealed class MenuSystem
         "She can roll through enemies or narrow spots"
     };
 
-    private static readonly string[] StageNames = {
-        "MAGICAL FOREST", "MAGICAL FOREST", "MAGICAL FOREST",
-        "CITY CENTER", "CITY CENTER", "CITY CENTER",
-        "BEACH", "BEACH", "BEACH",
-        "HEADQUARTERS", "HEADQUARTERS",
-        "BOSS ENCOUNTER",
-        "SURVIVAL ARENA"
+    private record StageInfo(string Title, string Briefing1, string Briefing2);
+
+    private static readonly StageInfo[] StageDetails = new StageInfo[]
+    {
+        new("MAGICAL FOREST I", "The enchanted woods are invaded by demonic minions.", "Clear out the vanguard forces along the woodland trail."),
+        new("MAGICAL FOREST II", "Enemy commanders have set deep forest blockades.", "Use elemental attacks to shatter magical barrier wards."),
+        new("MAGICAL FOREST III", "The sacred inner glade is besieged by heavy forces.", "Overcome the siege commanders and secure the sacred glade."),
+        new("BRIARWOOD CITY I", "Invasion forces breach the central metropolitan streets.", "Protect Briarwood citizens and eliminate hostiles."),
+        new("BRIARWOOD CITY II", "Demonic strike teams take positions across the rooftops.", "Scale the towers to eliminate aerial snipers and scouts."),
+        new("BRIARWOOD CITY III", "Morpheon's assault team lays siege to the central plaza.", "Destroy the siege battalion and liberate the city center."),
+        new("COASTAL SHORES I", "Amphibious demonic landing squads arrive on the coast.", "Hold the beach line against the aggressive first wave."),
+        new("COASTAL SHORES II", "Demonic troops fortify positions across the dunes.", "Fight through heavy crossfire and clear the coastal ridge."),
+        new("COASTAL SHORES III", "The enemy has captured the coastal lighthouse outpost.", "Scale the heights to retake the coastal beacon."),
+        new("UNDERWORLD GATE", "The outer perimeter gate of Morticon's dark fortress.", "Breach the gate defenses and storm the entryway."),
+        new("FORTRESS SANCTUM", "Infiltrate deep into the Underworld stronghold.", "Defeat Morticon's elite royal bodyguards in the hall."),
+        new("FINAL BATTLE: MORTICON", "MORTICON awaits in the Throne Room of Darkness!", "Unleash all Mystic power to banish Morticon forever!"),
+        new("SURVIVAL ARENA", "An endless gauntlet against relentless demonic legions.", "How many enemy waves can your Mystic Ranger survive?")
     };
 
     private readonly Actor?[] _characterPreviews = new Actor?[5];
@@ -160,12 +170,36 @@ public sealed class MenuSystem
                 if (done)
                 {
                     _lastFinalScore = App.var_int_g;
+                    bool won = ActiveGame.LevelWon;
+                    int finishedLevel = CoreGame.G;
                     ActiveGame = null;
-                    _saveManager.Data.HighestUnlockedLevel = Math.Clamp(CoreGame.H, 1, 12);
-                    _saveManager.Save();
 
-                    bool qualifies = _saveManager.CheckHighScore(_lastFinalScore, _isSurvivalMode, out _);
-                    if (qualifies)
+                    if (won)
+                    {
+                        _saveManager.Data.HighestUnlockedLevel = Math.Clamp(CoreGame.H, 1, 12);
+                        _saveManager.Save();
+
+                        if (!_isSurvivalMode && finishedLevel < CoreGame.D)
+                        {
+                            // Move straight into the next level with accumulated score!
+                            int nextLevel = finishedLevel + 1;
+                            _selectedLevel = nextLevel;
+                            StartGame(nextLevel, _selectedCharacter, survival: false);
+                            return;
+                        }
+                        else if (!_isSurvivalMode && finishedLevel >= CoreGame.D)
+                        {
+                            // Beat the entire game!
+                            bool qualifies = _saveManager.CheckHighScore(_lastFinalScore, _isSurvivalMode, out _);
+                            State = qualifies ? GameState.NameEntry : GameState.Victory;
+                            PlayMenuMusic();
+                            return;
+                        }
+                    }
+
+                    // Lost/died or Survival mode ended
+                    bool qualifiesLoss = _saveManager.CheckHighScore(_lastFinalScore, _isSurvivalMode, out _);
+                    if (qualifiesLoss)
                     {
                         _nameCursor = 0;
                         State = GameState.NameEntry;
@@ -253,11 +287,25 @@ public sealed class MenuSystem
                 break;
 
             case GameState.GameOver:
-            case GameState.Victory:
-                if (keyCode == -7 || keyCode == -5 || keyCode == 48)
+                if (keyCode == -5 || keyCode == -6 || keyCode == 53 || keyCode == 10 || keyCode == 13 || keyCode == 32)
+                {
+                    // Retry mission!
+                    StartGame(_selectedLevel, _selectedCharacter, _isSurvivalMode);
+                }
+                else if (keyCode == -7 || keyCode == 27 || keyCode == 48)
                 {
                     State = GameState.MainMenu;
                     _menuIndex = 0;
+                    PlayMenuMusic();
+                }
+                break;
+
+            case GameState.Victory:
+                if (keyCode == -7 || keyCode == -5 || keyCode == -6 || keyCode == 48 || keyCode == 53 || keyCode == 10 || keyCode == 13 || keyCode == 32)
+                {
+                    State = GameState.MainMenu;
+                    _menuIndex = 0;
+                    PlayMenuMusic();
                 }
                 break;
         }
@@ -350,17 +398,40 @@ public sealed class MenuSystem
     private void HandleLevelSelectInput(int key)
     {
         int maxLvl = Math.Min(12, Math.Max(1, _saveManager.Data.HighestUnlockedLevel));
-        if (key == -3 || key == -1) // LEFT/UP
+        if (key == -3) // LEFT
         {
-            _selectedLevel = (_selectedLevel <= 1) ? maxLvl : _selectedLevel - 1;
+            if (_selectedLevel == 13) _selectedLevel = 12;
+            else if (_selectedLevel > 1) _selectedLevel--;
+            else _selectedLevel = 13;
         }
-        else if (key == -4 || key == -2) // RIGHT/DOWN
+        else if (key == -4) // RIGHT
         {
-            _selectedLevel = (_selectedLevel >= maxLvl) ? 1 : _selectedLevel + 1;
+            if (_selectedLevel == 13) _selectedLevel = 1;
+            else if (_selectedLevel < 13) _selectedLevel++;
+            else _selectedLevel = 1;
+        }
+        else if (key == -1) // UP
+        {
+            if (_selectedLevel == 13) _selectedLevel = 10;
+            else if (_selectedLevel > 4) _selectedLevel -= 4;
+            else _selectedLevel = 13;
+        }
+        else if (key == -2) // DOWN
+        {
+            if (_selectedLevel <= 8) _selectedLevel += 4;
+            else if (_selectedLevel <= 12) _selectedLevel = 13;
+            else _selectedLevel = 1;
         }
         else if (key == -5 || key == -6 || key == 53) // START LEVEL
         {
-            StartGame(_selectedLevel, _selectedCharacter, false);
+            if (_selectedLevel == 13)
+            {
+                StartGame(CoreGame.D, _selectedCharacter, true);
+            }
+            else if (_selectedLevel <= maxLvl)
+            {
+                StartGame(_selectedLevel, _selectedCharacter, false);
+            }
         }
         else if (key == -7) // BACK
         {
@@ -1205,120 +1276,132 @@ public sealed class MenuSystem
     {
         DrawOGMenuFrame(gr, screenW, screenH, "START", "BACK", drawWatermark: false);
         int centerX = screenW >> 1;
-
         int maxLvl = Math.Min(12, Math.Max(1, _saveManager.Data.HighestUnlockedLevel));
 
-        GMIDlet.a(3, "SELECT LEVEL", centerX, 14, 17);
+        GMIDlet.a(3, "SELECT MISSION", centerX, 14, 17);
         DrawDivider(gr, 30, screenW);
 
-        string lvlStr = _selectedLevel == 13 ? "SURVIVAL ARENA" : $"STAGE {_selectedLevel} OF 12";
-        int lvlW = GMIDlet.a(3, lvlStr);
-        GMIDlet.a(3, lvlStr, centerX, 36, 17);
-        DrawArrow(gr, centerX - (lvlW / 2) - 14, 38, isRight: false);
-        DrawArrow(gr, centerX + (lvlW / 2) + 8, 38, isRight: true);
-        DrawDivider(gr, 54, screenW);
-
-        string stageName = _selectedLevel <= 13 ? StageNames[_selectedLevel - 1] : "MYSTIC REALM";
-        GMIDlet.a(3, stageName, centerX, 60, 17);
-        bool isCurrentUnlocked = _selectedLevel <= maxLvl || _selectedLevel == 13;
-        if (isCurrentUnlocked)
+        // 3x4 Stage Grid (Stages 1..12)
+        int startX = centerX - 105;
+        for (int i = 0; i < 12; i++)
         {
-            GMIDlet.a(1, _selectedLevel == 13 ? "DEFEAT ALL WAVES!" : $"MISSION LEVEL {_selectedLevel}  -  STATUS: UNLOCKED", centerX, 76, 17);
-        }
-        else
-        {
-            GMIDlet.a(2, $"LOCKED  -  CLEAR STAGE {maxLvl} TO UNLOCK", centerX, 76, 17);
-        }
-        GMIDlet.a(0, $"PROGRESSION: {maxLvl}/12 STAGES UNLOCKED", centerX, 92, 17);
-        DrawDivider(gr, 108, screenW);
+            int col = i % 4;
+            int row = i / 4;
+            int cardX = startX + col * 54;
+            int cardY = 35 + row * 26;
+            int lvl = i + 1;
+            bool cardUnlocked = lvl <= maxLvl;
+            bool isSelected = _selectedLevel == lvl;
 
-        // World Map Artwork Image[23] (222x145)
-        var images = GMIDlet.var_javax_microedition_lcdui_Image_arr_a;
-        CoreImage? mapArt = (images != null && images.Length > 23) ? images[23] : null;
-        if (mapArt != null)
-        {
-            int mapY = 120;
-            int n4 = mapY + 17; // 137
-            gr.DrawImage(mapArt, centerX, mapY, 17);
-
-            // Draw ornamental golden frame around the world map
-            int mapW = mapArt.Width;
-            int mapH = mapArt.Height;
-            int mapLeft = centerX - (mapW >> 1);
-            gr.SetColor(0xFFD700);
-            gr.DrawRect(mapLeft - 1, mapY - 1, mapW + 1, mapH + 1);
-
-            // Render level nodes
-            for (int i = 0; i < 12; i++)
+            if (isSelected)
             {
-                int nodeX = (App.var_byte_arr_f != null && App.var_byte_arr_f.Length >= (i * 2 + 2))
-                    ? centerX + App.var_byte_arr_f[i * 2]
-                    : centerX - 45 + (i % 4) * 30;
-                int nodeY = (App.var_byte_arr_f != null && App.var_byte_arr_f.Length >= (i * 2 + 2))
-                    ? n4 + App.var_byte_arr_f[i * 2 + 1]
-                    : n4 + 15 + (i / 4) * 20;
-
-                bool isUnlocked = (i + 1) <= maxLvl;
-                bool isSelected = (_selectedLevel - 1) == i;
-
-                if (i == 11) // Boss Level 12
-                {
-                    // Authentic 2-frame boss skull: frame 0 = unlocked, frame 1 = locked
-                    GMIDlet.a(24, nodeX - 10, nodeY - 10, 2, 1, isUnlocked ? 0 : 1, 0);
-                }
-                else
-                {
-                    if (isUnlocked)
-                    {
-                        // Node ring Image[25] (19x9)
-                        CoreImage? ringImg = (images != null && images.Length > 25) ? images[25] : null;
-                        if (ringImg != null)
-                        {
-                            gr.DrawImage(ringImg, nodeX - 9, nodeY - 4, 20);
-                        }
-                        // Ranger emblem Image[15..19] (11x13)
-                        int iconIdx = 15 + (i % 5);
-                        CoreImage? rangerIcon = (images != null && images.Length > iconIdx) ? images[iconIdx] : null;
-                        if (rangerIcon != null)
-                        {
-                            gr.DrawImage(rangerIcon, nodeX - 5, nodeY - 10, 20);
-                        }
-                    }
-                    else
-                    {
-                        // Locked icon Image[21] (11x13)
-                        CoreImage? lockIcon = (images != null && images.Length > 21) ? images[21] : null;
-                        if (lockIcon != null)
-                        {
-                            gr.DrawImage(lockIcon, nodeX - 5, nodeY - 6, 20);
-                        }
-                    }
-                }
-
-                if (isSelected)
-                {
-                    // Dual gold and white cursor box
-                    gr.SetColor(0xFFD700);
-                    gr.DrawRect(nodeX - 11, nodeY - 12, 22, 22);
-                    gr.SetColor(0xFFFFFF);
-                    gr.DrawRect(nodeX - 12, nodeY - 13, 24, 24);
-
-                    // Directional arrow indicator
-                    DrawArrow(gr, nodeX - 6, nodeY - 20, isRight: true);
-                }
+                gr.SetColor(0xFFD700);
+                gr.DrawRect(cardX - 1, cardY - 1, 49, 23);
+                gr.SetColor(0xFFFFFF);
+                gr.DrawRect(cardX, cardY, 47, 21);
+                gr.SetColor(0x601418);
+                gr.FillRect(cardX + 1, cardY + 1, 46, 20);
+                GMIDlet.a(3, lvl == 12 ? "BOSS" : $"ST {lvl:D2}", cardX + 24, cardY + 4, 17);
+            }
+            else if (cardUnlocked)
+            {
+                gr.SetColor(0x8B7500);
+                gr.DrawRect(cardX, cardY, 47, 21);
+                gr.SetColor(0x28060A);
+                gr.FillRect(cardX + 1, cardY + 1, 46, 20);
+                GMIDlet.a(1, lvl == 12 ? "BOSS" : $"ST {lvl:D2}", cardX + 24, cardY + 4, 17);
+            }
+            else
+            {
+                gr.SetColor(0x382A2A);
+                gr.DrawRect(cardX, cardY, 47, 21);
+                gr.SetColor(0x120608);
+                gr.FillRect(cardX + 1, cardY + 1, 46, 20);
+                GMIDlet.a(0, $"ST {lvl:D2}", cardX + 24, cardY + 4, 17);
             }
         }
+
+        // Survival Arena Row (Level 13)
+        int survX = startX;
+        int survY = 114;
+        bool isSurvSelected = _selectedLevel == 13;
+        if (isSurvSelected)
+        {
+            gr.SetColor(0xFFD700);
+            gr.DrawRect(survX - 1, survY - 1, 211, 23);
+            gr.SetColor(0xFFFFFF);
+            gr.DrawRect(survX, survY, 209, 21);
+            gr.SetColor(0x601418);
+            gr.FillRect(survX + 1, survY + 1, 208, 20);
+            GMIDlet.a(3, "★ SURVIVAL ARENA ★", centerX, survY + 4, 17);
+        }
         else
         {
-            gr.SetColor(0x180004);
-            gr.FillRect(centerX - 95, 120, 190, 145);
-            gr.SetColor(0xFFD700);
-            gr.DrawRect(centerX - 95, 120, 189, 144);
-            GMIDlet.a(1, "WORLD MAP", centerX, 175, 17);
-            GMIDlet.a(0, "USE ARROWS TO CHOOSE STAGE", centerX, 205, 17);
+            gr.SetColor(0x8B7500);
+            gr.DrawRect(survX, survY, 209, 21);
+            gr.SetColor(0x28060A);
+            gr.FillRect(survX + 1, survY + 1, 208, 20);
+            GMIDlet.a(1, "SURVIVAL ARENA (ENDLESS WAVES)", centerX, survY + 4, 17);
         }
 
-        DrawDivider(gr, 272, screenW);
+        DrawDivider(gr, 140, screenW);
+
+        // Mission Dossier Box
+        int boxW = Math.Min(222, screenW - 16);
+        int boxX = centerX - (boxW / 2);
+        int boxY = 144;
+        int boxH = 124;
+
+        gr.SetColor(0x24080C);
+        gr.FillRect(boxX, boxY, boxW, boxH);
+        gr.SetColor(0xFFD700);
+        gr.DrawRect(boxX, boxY, boxW - 1, boxH - 1);
+        gr.SetColor(0x600C12);
+        gr.DrawRect(boxX + 2, boxY + 2, boxW - 5, boxH - 5);
+
+        // Corner accents
+        gr.SetColor(0xFFD700);
+        gr.FillRect(boxX, boxY, 3, 3);
+        gr.FillRect(boxX + boxW - 3, boxY, 3, 3);
+        gr.FillRect(boxX, boxY + boxH - 3, 3, 3);
+        gr.FillRect(boxX + boxW - 3, boxY + boxH - 3, 3, 3);
+
+        int infoIdx = Math.Clamp(_selectedLevel - 1, 0, 12);
+        var info = StageDetails[infoIdx];
+
+        GMIDlet.a(3, info.Title, centerX, boxY + 7, 17);
+        gr.SetColor(0x8B7500);
+        gr.DrawLine(boxX + 10, boxY + 23, boxX + boxW - 10, boxY + 23);
+
+        GMIDlet.a(1, info.Briefing1, centerX, boxY + 28, 17);
+        GMIDlet.a(1, info.Briefing2, centerX, boxY + 44, 17);
+
+        bool isUnlocked = _selectedLevel <= maxLvl || _selectedLevel == 13;
+        if (isUnlocked)
+        {
+            gr.SetColor(0x1B4D20);
+            gr.FillRect(centerX - 80, boxY + 65, 160, 16);
+            gr.SetColor(0x40B040);
+            gr.DrawRect(centerX - 80, boxY + 65, 159, 15);
+            GMIDlet.a(3, "STATUS: READY TO DEPLOY", centerX, boxY + 67, 17);
+
+            GMIDlet.a(0, "PRESS ENTER OR A TO START MISSION", centerX, boxY + 86, 17);
+        }
+        else
+        {
+            gr.SetColor(0x4A1010);
+            gr.FillRect(centerX - 80, boxY + 65, 160, 16);
+            gr.SetColor(0xB03030);
+            gr.DrawRect(centerX - 80, boxY + 65, 159, 15);
+            GMIDlet.a(2, $"LOCKED - COMPLETE STAGE {maxLvl}", centerX, boxY + 67, 17);
+
+            GMIDlet.a(0, "STAGE LOCKED BY EVIL FORCES", centerX, boxY + 86, 17);
+        }
+
+        string[] rangerNames = { "RED RANGER (NICK)", "YELLOW RANGER (CHIP)", "BLUE RANGER (MADISON)", "PINK RANGER (VIDA)", "GREEN RANGER (XANDER)" };
+        GMIDlet.a(1, $"OPERATIVE: {rangerNames[_selectedCharacter]}", centerX, boxY + 102, 17);
+
+        DrawDivider(gr, 274, screenW);
     }
 
     private void RenderHighScores(Graphics gr, int screenW, int screenH)
@@ -1636,7 +1719,8 @@ public sealed class MenuSystem
 
     private void RenderGameOver(Graphics gr, int screenW, int screenH)
     {
-        DrawOGMenuFrame(gr, screenW, screenH, "SELECT", "EXIT", drawWatermark: true);
+        bool isVictory = State == GameState.Victory;
+        DrawOGMenuFrame(gr, screenW, screenH, isVictory ? "CONTINUE" : "RETRY", "MENU", drawWatermark: true);
         int centerX = screenW >> 1;
 
         var images = GMIDlet.var_javax_microedition_lcdui_Image_arr_a;
@@ -1646,12 +1730,20 @@ public sealed class MenuSystem
             gr.DrawImage(shield, centerX, 15, 17);
         }
 
-        GMIDlet.a(3, State == GameState.Victory ? "CONGRATULATIONS!" : "GAME OVER", centerX, 130, 17);
+        GMIDlet.a(3, isVictory ? "CONGRATULATIONS!" : "GAME OVER", centerX, 130, 17);
         GMIDlet.a(1, $"FINAL SCORE: {_lastFinalScore}", centerX, 160, 17);
 
-        if ((_animTick % 30) < 20)
+        if (!isVictory)
         {
-            GMIDlet.a(0, "PRESS ENTER TO CONTINUE", centerX, 220, 17);
+            GMIDlet.a(3, "PRESS ENTER: RETRY MISSION", centerX, 205, 17);
+            GMIDlet.a(1, "PRESS ESC: MAIN MENU", centerX, 230, 17);
+        }
+        else
+        {
+            if ((_animTick % 30) < 20)
+            {
+                GMIDlet.a(0, "PRESS ENTER TO CONTINUE", centerX, 220, 17);
+            }
         }
     }
 
@@ -1720,11 +1812,57 @@ public sealed class MenuSystem
                 break;
 
             case GameState.LevelSelect:
-                if (leftClick)
+                if (localX >= centerX - 105 && localX <= centerX + 105)
                 {
-                    if (localX < centerX - 70 && localY >= 30 && localY <= 65) HandleLevelSelectInput(-3);
-                    else if (localX > centerX + 70 && localY >= 30 && localY <= 65) HandleLevelSelectInput(-4);
-                    else if (localY >= 270) HandleLevelSelectInput(-5);
+                    // Check Grid 3x4 (Stages 1..12)
+                    for (int i = 0; i < 12; i++)
+                    {
+                        int col = i % 4;
+                        int row = i / 4;
+                        int cardX = centerX - 105 + col * 54;
+                        int cardY = 35 + row * 26;
+                        if (localX >= cardX && localX <= cardX + 48 && localY >= cardY && localY <= cardY + 22)
+                        {
+                            int targetLvl = i + 1;
+                            if (leftClick)
+                            {
+                                int maxUnlocked = Math.Min(12, Math.Max(1, _saveManager.Data.HighestUnlockedLevel));
+                                if (_selectedLevel == targetLvl && targetLvl <= maxUnlocked)
+                                {
+                                    StartGame(targetLvl, _selectedCharacter, false);
+                                }
+                                else
+                                {
+                                    _selectedLevel = targetLvl;
+                                }
+                            }
+                            return;
+                        }
+                    }
+
+                    // Check Survival Arena button (Y = 114..134)
+                    if (localY >= 114 && localY <= 134)
+                    {
+                        if (leftClick)
+                        {
+                            if (_selectedLevel == 13)
+                            {
+                                StartGame(CoreGame.D, _selectedCharacter, true);
+                            }
+                            else
+                            {
+                                _selectedLevel = 13;
+                            }
+                        }
+                        return;
+                    }
+
+                    // Check Deploy button area in Dossier box (Y = 205..230)
+                    if (localY >= 205 && localY <= 230 && leftClick)
+                    {
+                        HandleLevelSelectInput(-5);
+                        return;
+                    }
                 }
                 break;
 
@@ -1840,14 +1978,30 @@ public sealed class MenuSystem
                 }
                 break;
 
+            case GameState.GameOver:
+                if (leftClick)
+                {
+                    if (localY >= 195 && localY <= 220)
+                    {
+                        StartGame(_selectedLevel, _selectedCharacter, _isSurvivalMode);
+                    }
+                    else if (localY < screenH - 30)
+                    {
+                        State = GameState.MainMenu;
+                        _menuIndex = 0;
+                        PlayMenuMusic();
+                    }
+                }
+                break;
+
+            case GameState.Victory:
             case GameState.HighScores:
             case GameState.Help:
-            case GameState.GameOver:
-            case GameState.Victory:
                 if (leftClick && localY < screenH - 30)
                 {
                     State = GameState.MainMenu;
                     _menuIndex = 0;
+                    PlayMenuMusic();
                 }
                 break;
         }
