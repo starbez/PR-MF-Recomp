@@ -24,16 +24,18 @@
 - [x] Generate Mermaid state diagram for `g`.
 - [x] Document gameplay tick pipeline in `f`.
 
-## Phase 3: Resource Formats & Independent Parsers [UPCOMING]
-- [ ] Parse `lang` and `text__*.txt`.
-- [ ] Parse length-prefixed PNGs (`lm`, `lp__*`, `lpok`, `subtitle__*`, `bg*`, `font`, `i.png`).
-- [ ] Parse `s0..s64` sprite formats and palette swap flags.
-- [ ] Parse `b0..b12` block tables (16x16 tiles).
-- [ ] Parse `l0..l12` level layouts and entities.
-- [ ] Parse `l` master pack, `spr`, and `fr`.
-- [ ] Extract and verify audio blobs from `l`.
+## Phase 3: Resource Formats & Independent Parsers [DONE]
+- [x] Parse `lang` and `text__*.txt`.
+- [x] Parse length-prefixed PNGs (`lm`, `lp__*`, `lpok`, `subtitle__*`, `bg*`, `font`, `i.png`).
+- [x] Parse `s0..s64` sprite formats and palette swap flags.
+- [x] Parse `b0..b12` block tables (16x16 tiles).
+- [x] Parse `l0..l12` level layouts and entities.
+- [x] Parse `l` master pack, `spr`, and `fr`.
+- [x] Extract and verify audio blobs from `l`.
+- [x] Document all formats in `docs/FORMATS.md`.
+- [x] Automated verification suite `tools/test_parsers.py` passes 107/107 files.
 
-## Phase 4: Headless Validation Harness [UPCOMING]
+## Phase 4: Headless Validation Harness [IN PROGRESS]
 - [ ] Build MIDP stubs in Java (`tools/harness/`).
 - [ ] Deterministic clock (70ms tick) & fixed RNG seeding.
 - [ ] State trace recorder & frame dumper.

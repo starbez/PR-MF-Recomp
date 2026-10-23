@@ -10,13 +10,13 @@ Based on decompilation, bytecode analysis, and literal logic translation validat
 
 | Part | Status | Notes |
 |---|---|---|
-| Decompilation and analysis | 100% | Phase 1 & Phase 2 complete. 100% of classes mapped, bytecode audited, state machine & game systems fully documented. |
+| Decompilation and analysis | 100% | Phase 1 & 2 complete. All classes analyzed, bytecode audited, state machine documented. |
 | Game logic | 0% | 0/0 traces identical |
 | Rendering | 0% | 0 frames pixel-identical |
 | Window, scaling, input | 0% | Not started |
 | Menus, hi-scores, saving | 0% | Formats and RMS byte layout fully mapped |
-| Audio | 0% | Audio format mapped inside `l` pack |
-| **Estimated total** | 10% | Decompilation & complete code analysis finished |
+| Audio | 50% | Both MIDI tracks extracted from `l` pack to `sons/` and verified |
+| **Estimated total** | 18% | Phase 1-3 complete: 107/107 resource formats verified by independent parsers |
 
 ---
 

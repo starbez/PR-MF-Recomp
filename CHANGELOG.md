@@ -2,7 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased] - Phase 2 Complete
+## [Unreleased] - Phase 3 Complete
+### Added
+- Independent Python format parsers in `tools/`:
+  - `decode_text.py`: `lang` and `text__*.txt` (6 string arrays per language, 222 strings each).
+  - `parse_pngs.py`: Length-prefixed PNG extraction (`lm`, `lp__*`, `lpok`, `subtitle__*`, `bg*`, `font`, `i.png`).
+  - `parse_sprites.py`: All 55 sprite files `s0..s64` and their PLTE palette variants.
+  - `parse_blocks.py`: 13 block definition files `b0..b12` (16x16 tile properties and parallax layers).
+  - `parse_level.py`: 13 level layout files `l0..l12` (actors, triggers, hazards, splines).
+  - `parse_pack.py`: Global packs `fr` (660 rects), `spr` (40 animation definitions), and master pack `l`.
+- `tools/test_parsers.py`: Automated test suite verifying 107/107 files parsed with 0 unconsumed bytes.
+- Extracted and verified both MIDI tracks from `l` into `sons/` (`sound_1.mid`, `sound_2.mid`).
+- Complete binary format specification authored in `docs/FORMATS.md`.
+- Status report recorded in `docs/STATUS.md`.
+
+## [0.2.0] - Phase 2 Complete
 ### Added
 - Phase 2 Code Reading & Annotation completed in full:
   - Audited all 8 classes: `GMIDlet`, `g`, `f`, `a`, `b`, `c`, `d`, `e`.
