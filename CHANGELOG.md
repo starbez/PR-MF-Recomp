@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.1] - Character Visibility & Interpolation Fix
+### Fixed
+- **Player Character Visibility in Smooth 60 FPS (`Actor.cs`, `Game.cs`):**
+  - Resolved root cause of invisible player character when `Smooth60Fps` was enabled (the default): `var_a_f.InterpState.Update()` was previously only invoked in `Actor.a(true)` (which moving platforms called, but not player/enemies), leaving `RenderX` and `RenderY` at (0, 0) and placing the player off-screen.
+  - Added explicit `InterpState.Snap(var_int_d, var_int_e)` and `RenderX/Y` initialization on player spawn (`Game.e()`) and level start (`Game.void_a()`).
+  - Added per-tick actor interpolation state updates in `Game.k()` for player, enemies, projectiles, and moving platforms.
+  - Added fallback in `Actor.a()`: if `InterpState.Initialized` is false, coordinates immediately fall back to the actual actor simulation position (`var_int_d`, `var_int_e`).
+- **Character Select Sprite Preview (`MenuSystem.cs`):**
+  - Added dynamic Power Ranger sprite rendering on the Character Select screen, displaying the selected Ranger in their iconic colored suit and element below the stats box.
+
 ## [1.5.0] - Widescreen Rendering & Viewport Overhaul
 ### Fixed
 - **Widescreen Viewport & Buffer Allocation (`Game.cs`, `TileMap.cs`):**
