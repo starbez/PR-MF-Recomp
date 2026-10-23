@@ -24,3 +24,36 @@
 
 ### 3. What is Still Unknown
 - None. Ground truth traces are established and ready for Phase 5 (Literal C# port).
+
+
+## Status after Phase 5 (Literal C# Port of Logic & Trace Validation)
+
+### 1. What is Done
+- Implemented `port/PR.Core` (.NET 8):
+  - `JavaRandom`: Exact 48-bit Java LCG algorithm (`(seed * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1)`).
+  - `DataReader`, `DataWriter`: Big-endian binary readers/writers matching Java `DataInputStream` and `DataOutputStream`.
+  - `IResourceProvider`, `FolderResourceProvider`, `ZipResourceProvider`: Clean abstraction for loading assets from folder or JAR.
+  - `Actor`: Full actor model, sequence parsing, sub-rect slicing, hitbox mathematics, physics updates, combat states.
+  - `TileMap`: 16x16 collision grid, palette decompression, collision solver (slopes, hazards, walls), parallax scrolling.
+  - `App`: Resource pack loader for `/l`, `/fr`, `/spr`, character template factory (`a_a(int)`), text and save RMS layout.
+  - `Game`: Complete 70 ms fixed-step simulation loop (`boolean_b`), camera tracking, combat resolution, enemy AI (`d(a)`, `d(int)`), script bytecode interpreter (`c(int)`), survival wave advancement.
+- Implemented `port/PR.TraceTest` and `tools/run_traces.sh` / `tools/run_traces.ps1`:
+  - Verified 100% bit-identical execution against original Java bytecode traces:
+    - `idle_level1` (102 ticks) - **PASSED**
+    - `movement_level1` (152 ticks) - **PASSED**
+    - `combat_level1` (202 ticks) - **PASSED**
+    - `survival_level1` (152 ticks) - **PASSED**
+  - Verified negative control detects divergences when given mismatched seed / input.
+- Decompilation bugs resolved:
+  - Bytecode audit of `TileMap.cs`: palette header in `c.class` has loop count first, then array size.
+  - Bytecode audit of `Game.cs`: opcode 54 branch condition inverted by CFR decompilation.
+  - Bytecode audit of `Game.cs:f(Actor)`: recovered missing `var_int_f = 0` and `var_byte_c++` bytecode instructions.
+
+### 2. What is Verified vs. Inferred
+- **Simulation Determinism: [verified]**
+  - All 608 ticks across 4 gameplay scenarios are bit-identical line-for-line between C# and Java bytecode.
+- **Save State Format: [verified]**
+  - Serialization in `Game.a(DataOutputStream)` and `Game.b(DataInputStream)` matches Java binary layout.
+
+### 3. What is Still Unknown
+- Software renderer exact pixel blending / clipping parity for Phase 6 (to be verified next against recorded reference frames).

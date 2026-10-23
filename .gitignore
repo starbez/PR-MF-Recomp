@@ -13,7 +13,7 @@ tools/cfr.jar
 tools/dotnet/
 dist/
 dotnet-install*
-*.ps1
+!tools/*.ps1
 
 # .NET / C# build outputs
 bin/
