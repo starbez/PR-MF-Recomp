@@ -88,6 +88,8 @@ docs/
   FORMATS.md                      Byte-level spec of resource formats
   VALIDATION.md                   Trace & frame recording methodology
   STATUS.md                       Cumulative implementation logs & milestone status
+  PORTING_BRIEF.md                Original reverse-engineering requirements & brief
+  TODO.md                         Phase-by-phase completion checklist
 port/
   PR.Core/                        Core game logic & software renderer (.NET 8)
   PR.Game/                        Raylib desktop frontend (window, input, audio, UI)
