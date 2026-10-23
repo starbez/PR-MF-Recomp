@@ -20,6 +20,7 @@ public enum GameState
     LevelSelect,
     HighScores,
     Options,
+    DebugCheats,
     Rebind,
     Help,
     InGame,
@@ -100,7 +101,11 @@ public sealed class MenuSystem
         _audio.Volume = _saveManager.Data.Volume;
         PR.Core.EngineTweaks.Smooth60Fps = _saveManager.Data.Smooth60Fps;
         PR.Core.EngineTweaks.Widescreen = _saveManager.Data.Widescreen;
+        PR.Core.EngineTweaks.GodMode = _saveManager.Data.GodMode;
+        PR.Core.EngineTweaks.InfiniteMagic = _saveManager.Data.InfiniteMagic;
+        CoreGame.H = Math.Clamp(_saveManager.Data.HighestUnlockedLevel, 1, 12);
         _view.FitScaling = _saveManager.Data.FitScaling;
+        _view.SetTargetFPS(_saveManager.Data.TargetFps);
 
         PlayMenuMusic();
     }
@@ -156,6 +161,8 @@ public sealed class MenuSystem
                 {
                     _lastFinalScore = App.var_int_g;
                     ActiveGame = null;
+                    _saveManager.Data.HighestUnlockedLevel = Math.Clamp(CoreGame.H, 1, 12);
+                    _saveManager.Save();
 
                     bool qualifies = _saveManager.CheckHighScore(_lastFinalScore, _isSurvivalMode, out _);
                     if (qualifies)
@@ -207,6 +214,10 @@ public sealed class MenuSystem
 
             case GameState.Options:
                 HandleOptionsInput(keyCode);
+                break;
+
+            case GameState.DebugCheats:
+                HandleDebugCheatsInput(keyCode);
                 break;
 
             case GameState.Rebind:
@@ -357,9 +368,14 @@ public sealed class MenuSystem
         }
     }
 
+    private static readonly int[] FpsTargets = { 14, 60, 120, 144, 240, 0 };
+    private static readonly string[] FpsLabels = { "ORIGINAL (14)", "SMOOTH (60)", "HIGH (120)", "ULTRA (144)", "MAX (240)", "UNLIMITED" };
+
+    private string? _debugFeedback;
+
     private void HandleOptionsInput(int key)
     {
-        const int OptionsCount = 11;
+        const int OptionsCount = 12;
         if (key == -1) // UP
         {
             _subIndex = (_subIndex - 1 + OptionsCount) % OptionsCount;
@@ -403,9 +419,15 @@ public sealed class MenuSystem
                     _saveManager.Save();
                     break;
 
-                case 3: // Frame Rate (Smooth 60 / Original 14)
-                    _saveManager.Data.Smooth60Fps = !_saveManager.Data.Smooth60Fps;
+                case 3: // Frame Rate (Arbitrary support: 14, 60, 120, 144, 240, 0=unlimited)
+                    int curFpsIdx = Array.IndexOf(FpsTargets, _saveManager.Data.TargetFps);
+                    if (curFpsIdx < 0) curFpsIdx = 1;
+                    int nextFpsIdx = (curFpsIdx + dir + FpsTargets.Length) % FpsTargets.Length;
+                    int newFps = FpsTargets[nextFpsIdx];
+                    _saveManager.Data.TargetFps = newFps;
+                    _saveManager.Data.Smooth60Fps = (newFps != 14);
                     PR.Core.EngineTweaks.Smooth60Fps = _saveManager.Data.Smooth60Fps;
+                    _view.SetTargetFPS(newFps);
                     _saveManager.Save();
                     break;
 
@@ -440,11 +462,17 @@ public sealed class MenuSystem
                     _subIndex = 0;
                     break;
 
-                case 9: // Reset to Defaults
+                case 9: // Debug & Cheats Menu
+                    State = GameState.DebugCheats;
+                    _subIndex = 0;
+                    _debugFeedback = null;
+                    break;
+
+                case 10: // Reset to Defaults
                     ResetAllToDefaults();
                     break;
 
-                case 10: // Back
+                case 11: // Back
                     State = _returnToPause ? GameState.Paused : GameState.MainMenu;
                     break;
             }
@@ -452,6 +480,62 @@ public sealed class MenuSystem
         else if (key == -7) // BACK (ESC)
         {
             State = _returnToPause ? GameState.Paused : GameState.MainMenu;
+        }
+    }
+
+    private void HandleDebugCheatsInput(int key)
+    {
+        const int CheatsCount = 5;
+        if (key == -1) // UP
+        {
+            _subIndex = (_subIndex - 1 + CheatsCount) % CheatsCount;
+        }
+        else if (key == -2) // DOWN
+        {
+            _subIndex = (_subIndex + 1) % CheatsCount;
+        }
+        else if (key == -3 || key == -4 || key == -5 || key == -6 || key == 53) // LEFT/RIGHT/FIRE
+        {
+            switch (_subIndex)
+            {
+                case 0: // God Mode (Infinite HP)
+                    _saveManager.Data.GodMode = !_saveManager.Data.GodMode;
+                    PR.Core.EngineTweaks.GodMode = _saveManager.Data.GodMode;
+                    _saveManager.Save();
+                    _debugFeedback = _saveManager.Data.GodMode ? "GOD MODE ACTIVATED!" : "GOD MODE DISABLED";
+                    break;
+
+                case 1: // Infinite Magic
+                    _saveManager.Data.InfiniteMagic = !_saveManager.Data.InfiniteMagic;
+                    PR.Core.EngineTweaks.InfiniteMagic = _saveManager.Data.InfiniteMagic;
+                    _saveManager.Save();
+                    _debugFeedback = _saveManager.Data.InfiniteMagic ? "INFINITE MAGIC ACTIVATED!" : "INFINITE MAGIC DISABLED";
+                    break;
+
+                case 2: // Unlock All 12 Levels
+                    _saveManager.Data.HighestUnlockedLevel = 12;
+                    CoreGame.H = 12;
+                    _saveManager.Save();
+                    _debugFeedback = "ALL 12 LEVELS UNLOCKED!";
+                    break;
+
+                case 3: // Reset Progression to Level 1
+                    _saveManager.Data.HighestUnlockedLevel = 1;
+                    CoreGame.H = 1;
+                    _saveManager.Save();
+                    _debugFeedback = "PROGRESSION RESET TO LEVEL 1!";
+                    break;
+
+                case 4: // Back
+                    State = GameState.Options;
+                    _subIndex = 9;
+                    break;
+            }
+        }
+        else if (key == -7) // BACK (ESC)
+        {
+            State = GameState.Options;
+            _subIndex = 9;
         }
     }
 
@@ -678,6 +762,9 @@ public sealed class MenuSystem
                 break;
             case GameState.Options:
                 RenderOptions(gr, screenW, screenH);
+                break;
+            case GameState.DebugCheats:
+                RenderDebugCheats(gr, screenW, screenH);
                 break;
             case GameState.Rebind:
                 RenderRebind(gr, screenW, screenH);
@@ -1126,34 +1213,35 @@ public sealed class MenuSystem
 
         string lvlStr = _selectedLevel == 13 ? "SURVIVAL ARENA" : $"STAGE {_selectedLevel} OF 12";
         int lvlW = GMIDlet.a(3, lvlStr);
-        GMIDlet.a(3, lvlStr, centerX, 38, 17);
-        DrawArrow(gr, centerX - (lvlW / 2) - 14, 40, isRight: false);
-        DrawArrow(gr, centerX + (lvlW / 2) + 8, 40, isRight: true);
-
-        // Stage details box
-        int boxW = 190;
-        int boxH = 46;
-        int boxX = centerX - (boxW / 2);
-        gr.SetColor(0x280808);
-        gr.FillRect(boxX, 58, boxW, boxH);
-        gr.SetColor(0xFFD700);
-        gr.DrawRect(boxX, 58, boxW - 1, boxH - 1);
-        gr.SetColor(0x7D0000);
-        gr.DrawRect(boxX + 1, 59, boxW - 3, boxH - 3);
+        GMIDlet.a(3, lvlStr, centerX, 36, 17);
+        DrawArrow(gr, centerX - (lvlW / 2) - 14, 38, isRight: false);
+        DrawArrow(gr, centerX + (lvlW / 2) + 8, 38, isRight: true);
+        DrawDivider(gr, 54, screenW);
 
         string stageName = _selectedLevel <= 13 ? StageNames[_selectedLevel - 1] : "MYSTIC REALM";
-        GMIDlet.a(3, stageName, centerX, 64, 17);
-        GMIDlet.a(1, _selectedLevel == 13 ? "DEFEAT ALL WAVES!" : $"MISSION LEVEL {_selectedLevel}  -  UNLOCKED: 12/12", centerX, 84, 17);
+        GMIDlet.a(3, stageName, centerX, 60, 17);
+        bool isCurrentUnlocked = _selectedLevel <= maxLvl || _selectedLevel == 13;
+        if (isCurrentUnlocked)
+        {
+            GMIDlet.a(1, _selectedLevel == 13 ? "DEFEAT ALL WAVES!" : $"MISSION LEVEL {_selectedLevel}  -  STATUS: UNLOCKED", centerX, 76, 17);
+        }
+        else
+        {
+            GMIDlet.a(2, $"LOCKED  -  CLEAR STAGE {maxLvl} TO UNLOCK", centerX, 76, 17);
+        }
+        GMIDlet.a(0, $"PROGRESSION: {maxLvl}/12 STAGES UNLOCKED", centerX, 92, 17);
+        DrawDivider(gr, 108, screenW);
 
-        // World Map Artwork Image[23] if available
+        // World Map Artwork Image[23] (222x145)
         var images = GMIDlet.var_javax_microedition_lcdui_Image_arr_a;
         CoreImage? mapArt = (images != null && images.Length > 23) ? images[23] : null;
         if (mapArt != null)
         {
-            int mapY = 114;
+            int mapY = 120;
+            int n4 = mapY + 17; // 137
             gr.DrawImage(mapArt, centerX, mapY, 17);
 
-            // Draw ornamental frame around the world map
+            // Draw ornamental golden frame around the world map
             int mapW = mapArt.Width;
             int mapH = mapArt.Height;
             int mapLeft = centerX - (mapW >> 1);
@@ -1163,71 +1251,69 @@ public sealed class MenuSystem
             // Render level nodes
             for (int i = 0; i < 12; i++)
             {
-                int nodeX;
-                int nodeY;
-                if (App.var_byte_arr_f != null && App.var_byte_arr_f.Length >= (i * 2 + 2))
-                {
-                    nodeX = centerX + App.var_byte_arr_f[i * 2];
-                    nodeY = mapY + 17 + App.var_byte_arr_f[i * 2 + 1];
-                }
-                else
-                {
-                    nodeX = centerX - 45 + (i % 4) * 30;
-                    nodeY = mapY + 15 + (i / 4) * 20;
-                }
+                int nodeX = (App.var_byte_arr_f != null && App.var_byte_arr_f.Length >= (i * 2 + 2))
+                    ? centerX + App.var_byte_arr_f[i * 2]
+                    : centerX - 45 + (i % 4) * 30;
+                int nodeY = (App.var_byte_arr_f != null && App.var_byte_arr_f.Length >= (i * 2 + 2))
+                    ? n4 + App.var_byte_arr_f[i * 2 + 1]
+                    : n4 + 15 + (i / 4) * 20;
 
+                bool isUnlocked = (i + 1) <= maxLvl;
                 bool isSelected = (_selectedLevel - 1) == i;
 
-                if (i == 11) // Boss level
+                if (i == 11) // Boss Level 12
                 {
-                    CoreImage? bossImg = (images != null && images.Length > 24) ? images[24] : null;
-                    if (bossImg != null)
-                    {
-                        gr.DrawImage(bossImg, nodeX, nodeY, 17);
-                    }
-                    else
-                    {
-                        gr.SetColor(0xFF0000);
-                        gr.FillRect(nodeX - 3, nodeY - 3, 6, 6);
-                    }
+                    // Authentic 2-frame boss skull: frame 0 = unlocked, frame 1 = locked
+                    GMIDlet.a(24, nodeX - 10, nodeY - 10, 2, 1, isUnlocked ? 0 : 1, 0);
                 }
                 else
                 {
-                    // Ring Image[25]
-                    CoreImage? ringImg = (images != null && images.Length > 25) ? images[25] : null;
-                    if (ringImg != null)
+                    if (isUnlocked)
                     {
-                        gr.DrawImage(ringImg, nodeX - 4, nodeY - 7, 20);
-                    }
-                    // Ranger emblem
-                    int iconIdx = 15 + (i % 5);
-                    CoreImage? rangerIcon = (images != null && images.Length > iconIdx) ? images[iconIdx] : null;
-                    if (rangerIcon != null)
-                    {
-                        gr.DrawImage(rangerIcon, nodeX, nodeY, 36);
+                        // Node ring Image[25] (19x9)
+                        CoreImage? ringImg = (images != null && images.Length > 25) ? images[25] : null;
+                        if (ringImg != null)
+                        {
+                            gr.DrawImage(ringImg, nodeX - 9, nodeY - 4, 20);
+                        }
+                        // Ranger emblem Image[15..19] (11x13)
+                        int iconIdx = 15 + (i % 5);
+                        CoreImage? rangerIcon = (images != null && images.Length > iconIdx) ? images[iconIdx] : null;
+                        if (rangerIcon != null)
+                        {
+                            gr.DrawImage(rangerIcon, nodeX - 5, nodeY - 10, 20);
+                        }
                     }
                     else
                     {
-                        gr.SetColor(0x00FF88);
-                        gr.FillRect(nodeX - 2, nodeY - 2, 4, 4);
+                        // Locked icon Image[21] (11x13)
+                        CoreImage? lockIcon = (images != null && images.Length > 21) ? images[21] : null;
+                        if (lockIcon != null)
+                        {
+                            gr.DrawImage(lockIcon, nodeX - 5, nodeY - 6, 20);
+                        }
                     }
                 }
 
                 if (isSelected)
                 {
+                    // Dual gold and white cursor box
                     gr.SetColor(0xFFD700);
-                    gr.DrawRect(nodeX - 6, nodeY - 6, 12, 12);
+                    gr.DrawRect(nodeX - 11, nodeY - 12, 22, 22);
                     gr.SetColor(0xFFFFFF);
-                    gr.DrawRect(nodeX - 7, nodeY - 7, 14, 14);
+                    gr.DrawRect(nodeX - 12, nodeY - 13, 24, 24);
+
+                    // Directional arrow indicator
+                    DrawArrow(gr, nodeX - 6, nodeY - 20, isRight: true);
                 }
             }
         }
         else
         {
             gr.SetColor(0x180004);
-            gr.FillRect(centerX - 95, 114, 190, 145);
+            gr.FillRect(centerX - 95, 120, 190, 145);
             gr.SetColor(0xFFD700);
-            gr.DrawRect(centerX - 95, 114, 189, 144);
+            gr.DrawRect(centerX - 95, 120, 189, 144);
             GMIDlet.a(1, "WORLD MAP", centerX, 175, 17);
             GMIDlet.a(0, "USE ARROWS TO CHOOSE STAGE", centerX, 205, 17);
         }
@@ -1275,23 +1361,35 @@ public sealed class MenuSystem
         string[] langNames = { "DEUTSCH", "ENGLISH", "FRANCAIS", "ITALIANO" };
         string curLang = langNames[Math.Clamp(_saveManager.Data.LanguageIndex, 0, 3)];
 
+        string fpsDisplay = _saveManager.Data.TargetFps switch
+        {
+            14 => "ORIGINAL (14)",
+            60 => "SMOOTH (60)",
+            120 => "HIGH (120)",
+            144 => "ULTRA (144)",
+            240 => "MAX (240)",
+            0 => "UNLIMITED",
+            _ => $"{_saveManager.Data.TargetFps} FPS"
+        };
+
         string[] items = {
             $"SOUND: {(_saveManager.Data.SoundEnabled ? "ON" : "OFF")}",
             $"VOLUME: {_saveManager.Data.Volume / 10}%",
             $"LANGUAGE: {curLang}",
-            $"FRAME RATE: {(_saveManager.Data.Smooth60Fps ? "SMOOTH (60)" : "ORIGINAL (14)")}",
+            $"FRAME RATE: {fpsDisplay}",
             $"SCREEN: {(_saveManager.Data.Widescreen ? "WIDESCREEN" : "ORIGINAL")}",
             $"SCALING: {(_view.FitScaling ? "FIT" : "INTEGER")}",
             $"WINDOW SCALE: {_saveManager.Data.Scale}X",
             $"FULLSCREEN: {(_view.IsFullscreen ? "YES" : "NO")}",
             "CONTROLS: REBIND",
+            "DEBUG & CHEATS >",
             "RESET TO DEFAULTS",
             "BACK"
         };
 
         const int startY = 34;
-        const int itemH = 23;
-        int boxW = Math.Min(200, screenW - 36);
+        const int itemH = 20;
+        int boxW = Math.Min(216, screenW - 24);
         int boxX = centerX - (boxW / 2);
         for (int i = 0; i < items.Length; i++)
         {
@@ -1299,11 +1397,11 @@ public sealed class MenuSystem
             bool sel = i == _subIndex;
             if (sel)
             {
-                DrawSelectionHighlight(gr, boxX, y - 2, boxW, 20);
+                DrawSelectionHighlight(gr, boxX, y - 2, boxW, 18);
                 if (i < 8) // Options with left/right choices
                 {
                     DrawArrow(gr, boxX + 4, y + 2, isRight: false);
-                    DrawArrow(gr, boxX + boxW - 10, y + 2, isRight: true);
+                    DrawArrow(gr, boxX + boxW - 14, y + 2, isRight: true);
                 }
                 GMIDlet.a(3, items[i], centerX, y, 17);
             }
@@ -1312,6 +1410,56 @@ public sealed class MenuSystem
                 GMIDlet.a(1, items[i], centerX, y, 17);
             }
         }
+    }
+
+    private void RenderDebugCheats(Graphics gr, int screenW, int screenH)
+    {
+        DrawOGMenuFrame(gr, screenW, screenH, "SELECT", "BACK", drawWatermark: false);
+        int centerX = screenW >> 1;
+
+        GMIDlet.a(3, "DEBUG & CHEATS", centerX, 14, 17);
+        DrawDivider(gr, 30, screenW);
+
+        string[] items = {
+            $"GOD MODE (INFINITE HP): {(_saveManager.Data.GodMode ? "ON" : "OFF")}",
+            $"INFINITE MAGIC: {(_saveManager.Data.InfiniteMagic ? "ON" : "OFF")}",
+            "UNLOCK ALL 12 LEVELS",
+            "RESET PROGRESSION (LVL 1)",
+            "BACK"
+        };
+
+        const int startY = 56;
+        const int itemH = 28;
+        int boxW = Math.Min(216, screenW - 24);
+        int boxX = centerX - (boxW / 2);
+
+        for (int i = 0; i < items.Length; i++)
+        {
+            int y = startY + i * itemH;
+            bool sel = i == _subIndex;
+            if (sel)
+            {
+                DrawSelectionHighlight(gr, boxX, y - 2, boxW, 22);
+                if (i < 2)
+                {
+                    DrawArrow(gr, boxX + 4, y + 3, isRight: false);
+                    DrawArrow(gr, boxX + boxW - 14, y + 3, isRight: true);
+                }
+                GMIDlet.a(3, items[i], centerX, y, 17);
+            }
+            else
+            {
+                GMIDlet.a(1, items[i], centerX, y, 17);
+            }
+        }
+
+        if (!string.IsNullOrEmpty(_debugFeedback))
+        {
+            DrawDivider(gr, 220, screenW);
+            GMIDlet.a(3, _debugFeedback, centerX, 235, 17);
+        }
+
+        DrawDivider(gr, 272, screenW);
     }
 
     private void RenderRebind(Graphics gr, int screenW, int screenH)
@@ -1584,11 +1732,11 @@ public sealed class MenuSystem
                 if (localX >= centerX - 110 && localX <= centerX + 110)
                 {
                     const int startY = 34;
-                    const int itemH = 23;
-                    if (localY >= startY && localY < startY + 11 * itemH)
+                    const int itemH = 20;
+                    if (localY >= startY && localY < startY + 12 * itemH)
                     {
                         int idx = (int)((localY - startY) / itemH);
-                        if (idx >= 0 && idx < 11)
+                        if (idx >= 0 && idx < 12)
                         {
                             _subIndex = idx;
                             if (leftClick)
@@ -1600,9 +1748,15 @@ public sealed class MenuSystem
                                 }
                                 else if (idx == 9)
                                 {
-                                    ResetAllToDefaults();
+                                    State = GameState.DebugCheats;
+                                    _subIndex = 0;
+                                    _debugFeedback = null;
                                 }
                                 else if (idx == 10)
+                                {
+                                    ResetAllToDefaults();
+                                }
+                                else if (idx == 11)
                                 {
                                     State = _returnToPause ? GameState.Paused : GameState.MainMenu;
                                 }
@@ -1611,6 +1765,26 @@ public sealed class MenuSystem
                                     int dir = localX < centerX ? -3 : -4;
                                     HandleOptionsInput(dir);
                                 }
+                            }
+                        }
+                    }
+                }
+                break;
+
+            case GameState.DebugCheats:
+                if (localX >= centerX - 110 && localX <= centerX + 110)
+                {
+                    const int startY = 56;
+                    const int itemH = 28;
+                    if (localY >= startY && localY < startY + 5 * itemH)
+                    {
+                        int idx = (int)((localY - startY) / itemH);
+                        if (idx >= 0 && idx < 5)
+                        {
+                            _subIndex = idx;
+                            if (leftClick)
+                            {
+                                HandleDebugCheatsInput(-5);
                             }
                         }
                     }

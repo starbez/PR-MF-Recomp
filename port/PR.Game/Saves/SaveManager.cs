@@ -13,10 +13,13 @@ public sealed class SaveData
     public int Scale { get; set; } = 3;
     public bool Fullscreen { get; set; } = false;
     public bool Smooth60Fps { get; set; } = true; // Default Smooth (60)
+    public int TargetFps { get; set; } = 60; // 14, 60, 120, 144, 240, 0 (unlimited)
     public bool Widescreen { get; set; } = true;  // Default Widescreen
     public bool FitScaling { get; set; } = false; // Default Integer scaling
     public int SelectedCharacter { get; set; } = 0; // 0..4
-    public int HighestUnlockedLevel { get; set; } = 12;
+    public int HighestUnlockedLevel { get; set; } = 1; // Default 1 for authentic progression
+    public bool GodMode { get; set; } = false; // Infinite HP debug cheat
+    public bool InfiniteMagic { get; set; } = false; // Infinite Magic debug cheat
 
     public int[] StoryHighScores { get; set; } = new int[5] { 50000, 40000, 30000, 20000, 10000 };
     public string[] StoryHighScoreNames { get; set; } = new string[5] { "RED", "YEL", "BLU", "PNK", "GRN" };
@@ -64,8 +67,7 @@ public sealed class SaveManager
                     if (loaded.SurvivalHighScoreNames == null || loaded.SurvivalHighScoreNames.Length != 5)
                         loaded.SurvivalHighScoreNames = new string[5] { "NICK", "CHIP", "MADI", "VIDA", "XAND" };
 
-                    if (loaded.HighestUnlockedLevel < 12)
-                        loaded.HighestUnlockedLevel = 12;
+                    loaded.HighestUnlockedLevel = Math.Clamp(loaded.HighestUnlockedLevel, 1, 12);
 
                     return loaded;
                 }
@@ -101,9 +103,12 @@ public sealed class SaveManager
         Data.Scale = 3;
         Data.Fullscreen = false;
         Data.Smooth60Fps = true;
+        Data.TargetFps = 60;
         Data.Widescreen = true;
         Data.FitScaling = false;
-        Data.HighestUnlockedLevel = 12;
+        Data.HighestUnlockedLevel = 1;
+        Data.GodMode = false;
+        Data.InfiniteMagic = false;
         Save();
     }
 

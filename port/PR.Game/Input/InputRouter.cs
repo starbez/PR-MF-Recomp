@@ -178,7 +178,7 @@ public sealed class InputRouter
         SaveBindings();
     }
 
-    public void Update(Action<int> onKeyDown, Action<int> onKeyUp)
+    public void Update(Action<int> onKeyDown, Action<int> onKeyUp, bool isMenu = false)
     {
         var activeThisFrame = new HashSet<int>();
 
@@ -204,26 +204,63 @@ public sealed class InputRouter
         if (Raylib.IsKeyDown(KeyboardKey.Nine) || Raylib.IsKeyDown(KeyboardKey.Kp9)) activeThisFrame.Add(KEY_NUM9);
         if (Raylib.IsKeyDown(KeyboardKey.Zero) || Raylib.IsKeyDown(KeyboardKey.Kp0)) activeThisFrame.Add(KEY_NUM0);
 
-        // Gamepad (Gamepad 0)
-        if (Raylib.IsGamepadAvailable(0))
+        // Gamepad checks across all available controllers (0..3)
+        for (int pad = 0; pad < 4; pad++)
         {
-            if (Raylib.IsGamepadButtonDown(0, Bindings.GamepadUp) || Raylib.GetGamepadAxisMovement(0, GamepadAxis.LeftY) < -0.4f)
+            if (!Raylib.IsGamepadAvailable(pad)) continue;
+
+            float axisX = Raylib.GetGamepadAxisMovement(pad, GamepadAxis.LeftX);
+            float axisY = Raylib.GetGamepadAxisMovement(pad, GamepadAxis.LeftY);
+
+            // D-Pad and Left Analog Stick movement
+            if (Raylib.IsGamepadButtonDown(pad, GamepadButton.LeftFaceUp) || axisY < -0.35f)
                 activeThisFrame.Add(KEY_UP);
-            if (Raylib.IsGamepadButtonDown(0, Bindings.GamepadDown) || Raylib.GetGamepadAxisMovement(0, GamepadAxis.LeftY) > 0.4f)
+            if (Raylib.IsGamepadButtonDown(pad, GamepadButton.LeftFaceDown) || axisY > 0.35f)
                 activeThisFrame.Add(KEY_DOWN);
-            if (Raylib.IsGamepadButtonDown(0, Bindings.GamepadLeft) || Raylib.GetGamepadAxisMovement(0, GamepadAxis.LeftX) < -0.4f)
+            if (Raylib.IsGamepadButtonDown(pad, GamepadButton.LeftFaceLeft) || axisX < -0.35f)
                 activeThisFrame.Add(KEY_LEFT);
-            if (Raylib.IsGamepadButtonDown(0, Bindings.GamepadRight) || Raylib.GetGamepadAxisMovement(0, GamepadAxis.LeftX) > 0.4f)
+            if (Raylib.IsGamepadButtonDown(pad, GamepadButton.LeftFaceRight) || axisX > 0.35f)
                 activeThisFrame.Add(KEY_RIGHT);
 
-            if (Raylib.IsGamepadButtonDown(0, Bindings.GamepadFire))
-                activeThisFrame.Add(KEY_FIRE);
-            if (Raylib.IsGamepadButtonDown(0, Bindings.GamepadMagic))
-                activeThisFrame.Add(KEY_NUM0);
-            if (Raylib.IsGamepadButtonDown(0, Bindings.GamepadSoftLeft))
-                activeThisFrame.Add(KEY_SOFT_LEFT);
-            if (Raylib.IsGamepadButtonDown(0, Bindings.GamepadSoftRight) || Raylib.IsGamepadButtonDown(0, GamepadButton.MiddleRight))
-                activeThisFrame.Add(KEY_SOFT_RIGHT);
+            if (isMenu)
+            {
+                // In Menus: A / Start = Confirm, B = Back
+                if (Raylib.IsGamepadButtonDown(pad, GamepadButton.RightFaceDown) ||
+                    Raylib.IsGamepadButtonDown(pad, GamepadButton.MiddleRight))
+                {
+                    activeThisFrame.Add(KEY_FIRE);
+                }
+                if (Raylib.IsGamepadButtonDown(pad, GamepadButton.RightFaceRight) ||
+                    Raylib.IsGamepadButtonDown(pad, GamepadButton.MiddleLeft))
+                {
+                    activeThisFrame.Add(KEY_SOFT_RIGHT);
+                }
+            }
+            else
+            {
+                // In Game: A = Jump, X = Attack, B/Y/RB/RT = Magic, Start/Back = Pause
+                if (Raylib.IsGamepadButtonDown(pad, GamepadButton.RightFaceDown)) // A / Cross
+                    activeThisFrame.Add(KEY_UP); // Jump!
+                if (Raylib.IsGamepadButtonDown(pad, GamepadButton.RightFaceLeft)) // X / Square
+                    activeThisFrame.Add(KEY_FIRE); // Attack!
+                if (Raylib.IsGamepadButtonDown(pad, GamepadButton.RightFaceRight) || // B / Circle
+                    Raylib.IsGamepadButtonDown(pad, GamepadButton.RightFaceUp) ||   // Y / Triangle
+                    Raylib.IsGamepadButtonDown(pad, GamepadButton.RightTrigger1) || // RB
+                    Raylib.IsGamepadButtonDown(pad, GamepadButton.RightTrigger2))   // RT
+                {
+                    activeThisFrame.Add(KEY_NUM0); // Magic / Special!
+                }
+                if (Raylib.IsGamepadButtonDown(pad, GamepadButton.LeftTrigger1) ||
+                    Raylib.IsGamepadButtonDown(pad, GamepadButton.LeftTrigger2))
+                {
+                    activeThisFrame.Add(KEY_SOFT_LEFT);
+                }
+                if (Raylib.IsGamepadButtonDown(pad, GamepadButton.MiddleRight) ||
+                    Raylib.IsGamepadButtonDown(pad, GamepadButton.MiddleLeft))
+                {
+                    activeThisFrame.Add(KEY_SOFT_RIGHT); // Pause!
+                }
+            }
         }
 
         // Trigger press events

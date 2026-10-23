@@ -364,9 +364,12 @@ public sealed class Game
 
         if (aG > 0 && var_byte_arr_g != null)
         {
-            --aG;
-            n4 += var_byte_arr_g[aG + aG];
-            n5 += var_byte_arr_g[aG + aG + 1];
+            int idx = aG * 2;
+            if (idx >= 0 && idx + 1 < var_byte_arr_g.Length)
+            {
+                n4 += (sbyte)var_byte_arr_g[idx];
+                n5 += (sbyte)var_byte_arr_g[idx + 1];
+            }
         }
 
         if (EngineTweaks.Widescreen)
@@ -1111,6 +1114,18 @@ public sealed class Game
             if (aD > 0)
             {
                 --aD;
+            }
+            if (aG > 0)
+            {
+                --aG;
+            }
+            if (EngineTweaks.GodMode && var_a_f != null)
+            {
+                var_a_f.z = var_a_f.A;
+            }
+            if (EngineTweaks.InfiniteMagic)
+            {
+                an = am;
             }
             if (at == 0 && var_int_h != -1)
             {
@@ -2004,6 +2019,7 @@ public sealed class Game
 
     private bool boolean_a(Actor actor, int damage, int dir)
     {
+        if (EngineTweaks.GodMode && actor == var_a_f) return false;
         if (var_boolean_j && actor == var_a_f) return false;
         if ((actor.s == var_int_l || actor.s == var_int_k || actor.s == var_int_n) && actor.x == 15) return false;
         if (var_a_f != null && var_a_f.s == var_int_n && damage > 1 && var_byte_arr_g != null)
@@ -2787,6 +2803,10 @@ public sealed class Game
 
     public void a(bool win)
     {
+        if (win && G >= H && G < D)
+        {
+            H = G + 1;
+        }
         var_boolean_p = true;
     }
 

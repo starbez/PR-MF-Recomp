@@ -17,6 +17,16 @@ public static class EngineTweaks
     /// </summary>
     public static bool Widescreen { get; set; } = false;
 
+    /// <summary>
+    /// God Mode (Infinite HP). Disabled in tests.
+    /// </summary>
+    public static bool GodMode { get; set; } = false;
+
+    /// <summary>
+    /// Infinite Magic. Disabled in tests.
+    /// </summary>
+    public static bool InfiniteMagic { get; set; } = false;
+
     public static int RenderWidth => Widescreen ? WidescreenWidth : BaseWidth;
     public static int RenderHeight => BaseHeight;
 }

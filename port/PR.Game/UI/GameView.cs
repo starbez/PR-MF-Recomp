@@ -28,6 +28,11 @@ public sealed class GameView : IDisposable
     public int CurrentWidth => EngineTweaks.RenderWidth;
     public int CurrentHeight => EngineTweaks.RenderHeight;
 
+    public void SetTargetFPS(int fps)
+    {
+        Raylib.SetTargetFPS(fps);
+    }
+
     public Vector2 ScreenToVirtual(Vector2 screenPos)
     {
         if (screenPos.X < _destRect.X || screenPos.X >= _destRect.X + _destRect.Width ||

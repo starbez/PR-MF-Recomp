@@ -173,7 +173,8 @@ public static class Program
                 // Process Input
                 inputRouter.Update(
                     onKeyDown: key => menuSystem.OnKeyDown(key),
-                    onKeyUp: key => menuSystem.OnKeyUp(key)
+                    onKeyUp: key => menuSystem.OnKeyUp(key),
+                    isMenu: menuSystem.State != GameState.InGame
                 );
 
                 // Fixed-Step Simulation Update

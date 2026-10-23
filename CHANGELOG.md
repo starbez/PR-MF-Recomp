@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.7] - World Map Alignment, Debug & Cheats Menu, Screen Shake Fix, Controller Support, Authentic Progression & Arbitrary FPS
+### Added
+- **Debug & Cheats Submenu (`MenuSystem.cs`, `EngineTweaks.cs`, `SaveManager.cs`):**
+  - Added dedicated `DEBUG & CHEATS >` menu accessible directly from the Settings screen.
+  - **God Mode (Infinite HP):** Toggleable damage immunity and instant HP regeneration via `EngineTweaks.GodMode`.
+  - **Infinite Magic:** Locks magic energy to maximum capacity (`an = am`) via `EngineTweaks.InfiniteMagic`.
+  - **Unlock All 12 Levels:** One-click option to immediately unlock all 12 stages on the World Map.
+  - **Reset Progression (Lvl 1):** Reset progression back to Stage 1 for an authentic story playthrough.
+  - Fully switchable engine tweaks that default to `false` and remain strictly disabled during automated tests.
+- **Full Controller / Gamepad Support (`InputRouter.cs`, `Program.cs`):**
+  - Added multi-gamepad scanning across controllers 0 through 3.
+  - Context-aware controller mappings:
+    - **In Menus:** D-Pad / Left Analog Stick for navigation; `A` (FaceDown) or `Start` to select/confirm; `B` (FaceRight) to cancel/back out.
+    - **In Game:** Left Analog Stick / D-Pad to run, crouch, and climb ladders; **`A` (FaceDown) Jumps**; **`X` (FaceLeft) Attacks**; **`B` / `Y` / `RB` / `RT` casts Magic**; `LB` / `LT` softkey; `Start` / `Back` Pauses.
+- **Arbitrary Frame Rate Support (`GameView.cs`, `MenuSystem.cs`, `SaveManager.cs`):**
+  - Replaced the binary 14/60 toggle with full arbitrary frame rate selection: `14 (Original)`, `60 (Smooth)`, `120 (High)`, `144 (Ultra)`, `240 (Max)`, and `0 (Unlimited / VSync)`.
+  - Dynamically updates `Raylib.SetTargetFPS` through `GameView.SetTargetFPS(int fps)` and persists target frame rate in `SaveData.TargetFps`.
+- **Authentic Stage Progression (`Game.cs`, `SaveManager.cs`, `MenuSystem.cs`):**
+  - `HighestUnlockedLevel` now defaults to `1` on fresh saves.
+  - Beating a level in `Game.a(bool win)` advances progression (`H = G + 1`) and automatically persists to disk upon stage completion.
+  - Level Select bounds navigation to `HighestUnlockedLevel` unless unlocked via the Debug menu.
+
+### Fixed
+- **Level Selector World Map Alignment & Rendering (`MenuSystem.cs`):**
+  - Diagnosed image dimension mismatch: `Image[23]` is 222x145 pixels (not 120x80).
+  - Realigned map viewport to Y = 120 with node baseline at Y = 137, placing level markers directly onto their authentic island and road locations from `App.var_byte_arr_f`.
+  - Fixed Stage 12 Boss skull icon rendering: now cuts the 40x20 sheet into authentic 20x20 frames (`GMIDlet.a(24, ..., 2, 1, isUnlocked ? 0 : 1, 0)`) instead of drawing the raw 2-frame sprite sheet.
+  - Rendered authentic unlocked node rings `Image[25]`, ranger emblems `Image[15..19]`, locked node locks `Image[21]`, and active cursor highlight box with directional arrow.
+- **Last Level Screen Shake Effect Fix (`Game.cs`):**
+  - **Root Cause 1 (Signed Byte Conversion):** Java `byte[]` is signed (-128..127) while C# `byte[]` is unsigned (0..255). A delta of -2 (`0xFE`) in `Game.var_byte_arr_g` was treated as +254 in C#, teleporting the camera into the void during screen shake. Fixed by casting to `(sbyte)var_byte_arr_g[idx]`.
+  - **Root Cause 2 (Timer Decoupling):** Decrement `--aG` was erroneously placed inside render `d()`, draining the shake counter 60-240 times per second instead of at the canonical 14.3 Hz logic tick rate. Relocated to simulation tick `boolean_b()`.
+
 ## [1.5.6] - Audio Looping Thread-Affinity Fix, Character Selector Remake, All Levels Unlocked & Menu Center Box
 ### Fixed
 - **Audio Stopping After One Play / Thread-Affinity Error 263 (`MidiPlayer.cs`):**
