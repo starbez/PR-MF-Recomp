@@ -41,7 +41,6 @@ public sealed class MenuSystem
     private int _selectedLevel = 1;
     private bool _isSurvivalMode = false;
     private int _lastFinalScore = 0;
-    private bool _isHighScoreEntry = false;
     private char[] _nameInput = new char[4] { 'A', 'A', 'A', ' ' };
     private int _nameCursor = 0;
     private int _animTick = 0;
@@ -94,10 +93,11 @@ public sealed class MenuSystem
                 if (done)
                 {
                     _lastFinalScore = App.var_int_g;
+                    ActiveGame = null;
+
                     bool qualifies = _saveManager.CheckHighScore(_lastFinalScore, _isSurvivalMode, out _);
                     if (qualifies)
                     {
-                        _isHighScoreEntry = true;
                         _nameCursor = 0;
                         State = GameState.NameEntry;
                     }

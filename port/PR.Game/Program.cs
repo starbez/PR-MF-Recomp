@@ -38,6 +38,11 @@ public static class Program
             }
         }
 
+        if (cliLogs)
+        {
+            Console.WriteLine("[Init] Verbose logging enabled.");
+        }
+
         try
         {
             Console.WriteLine("==================================================");
