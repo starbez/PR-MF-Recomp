@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] - Widescreen Rendering & Viewport Overhaul
+### Fixed
+- **Widescreen Viewport & Buffer Allocation (`Game.cs`, `TileMap.cs`):**
+  - Resolved root cause of black/empty side bars and level cutoff: `Game.var_int_c` now dynamically takes `EngineTweaks.RenderWidth` (568 px) when widescreen is enabled, passing full viewport width to `TileMap` and allocating offscreen tilemap render targets at 592x336 px (37 columns) instead of clamping to 256 px (16 columns).
+  - Cleaned up `TileMap.void_b()` toroidal quadrant rendering: removed repeating column loop hack and restored seamless 4-quadrant toroidal drawing across the full 568 px viewport.
+- **Camera Viewport Bounds & Level Edge Clamping (`Game.cs`):**
+  - Clamped camera viewport bounds `ae` and `ag` to `[renderW >> 1, levelWidth - (renderW >> 1)]`, preventing off-level void scrolling (negative screen X) at level start while ensuring the camera stops cleanly when the screen edge hits the level boundary.
+  - Centered small boss arena levels (e.g. Level 5 with 448 px width) and clamped out-of-bounds tile lookups in `TileMap.c()` to edge columns `[0, m - 1]`, seamlessly extending boundary walls to both screen edges with zero seams or black bars.
+- **Logic & RNG Isolation (`Game.cs`):**
+  - Decoupled logic activation box (`Game.boolean_a(Actor)`) from widescreen viewport: strictly preserved original 4:3 camera activation bounds ($ac_{4:3} \pm 140$ px horizontally, $ad \pm 180$ px vertically), guaranteeing zero divergence in enemy spawns, AI triggers, physics, or PRNG order.
+  - Ensured all on-screen actors are rendered in widescreen even if inactive via `Actor.a()` widescreen bounds check.
+- **Verification:**
+  - Automated playthrough of 2 full levels (Level 1: 800 px, Level 2: 2336 px) with widescreen ON: 0 clamp violations, 0 empty edge seams, 0 pop-in anomalies.
+  - Automated validation suite with widescreen OFF: 100% bit-identical line-for-line across all 608 simulation ticks and 7 reference frames (ALL VALIDATIONS PASSED).
+
 ## [1.4.1] - Fullscreen & Display Fix
 ### Fixed
 - Fixed fullscreen toggle failure on Windows:

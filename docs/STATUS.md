@@ -204,6 +204,45 @@
   - Added Alt-key suppression in `InputRouter` so `Alt + Enter` does not fire in-game attacks.
   - Verified live status reflection in Settings menu.
 
+## Status after Widescreen Overhaul (Diagnosis & Resolution)
+
+### 1. Diagnosis Report (STEP 1)
+Nine debug screenshots were captured at widescreen (568x320) into `frames/widescreen_debug/`:
+- `title_screen.png`, `main_menu.png`, `level1_first_tick.png`, `level2_first_tick.png`, `level3_first_tick.png`, `mid_level.png`, `boss_fight.png`, `cutscene.png`, `game_over.png`.
+
+Analysis of problems (a) through (i):
+- **a) Black or empty bars at the sides:** **PRESENT (Before fix)**. In-game levels rendered only in a 240/256 px center column ($X \in [184, 451]$), leaving columns $0..183$ and $452..567$ as empty black void.
+- **b) Backgrounds (`bg*`) ending before screen edge / tiling with seams:** **PRESENT (Before fix)**. TileMap offscreen buffer allocated at only 256 px width; custom repetition loop caused visible seam lines and discontinuities.
+- **c) Level tiles not drawn in extra area:** **PRESENT (Before fix)**. `Game.var_int_c` was hardcoded to `App.var_int_a` (240), causing `TileMap` to clamp visible columns to $y = 16$ (256 px).
+- **d) Camera clamped to original width:** **PRESENT (Before fix)**. Camera bounds `ae` and `ag` clamped to $120$ ($240 / 2$) instead of $284$ ($568 / 2$). At level start, camera left edge scrolled to $120 - 284 = -164$, shifting tile 0 into column 164.
+- **e) Entities popping in/out near screen edges:** **PRESENT (Before fix)**. Original activation check tested $[-140, +140]$ px from camera center. Visible enemies between 140 and 284 px remained frozen until player got close.
+- **f) HUD, menus, or cutscenes misplaced:** **PRESENT (partially)**. Menus and splash screens required explicit centering and safe-zone anchoring.
+- **g) Wrong clipping:** **PRESENT (Before fix)**. Clip rectangles were constrained to 240 px.
+- **h) Aspect ratio & mouse mapping:** **NOT PRESENT / RESOLVED**. Handled correctly via virtual coordinate translation.
+- **i) Gameplay differences with widescreen OFF:** **NOT PRESENT**. 100% bit-identical when widescreen is OFF.
+
+### 2. Implementation Summary (STEP 2)
+1. **Rendering Buffer Allocation:** `Game.var_int_c` dynamically initialized to `EngineTweaks.RenderWidth` (568 px) when widescreen is enabled. `TileMap` now allocates offscreen target at 592x336 px ($37 \times 16$).
+2. **Toroidal Reconstruction:** Removed repeating loop hack from `TileMap.void_b()`; original 4-quadrant toroidal drawing cleanly covers the entire 568 px width.
+3. **Camera Clamping & Level Edge Extension:**
+   - Level camera clamped to `[renderW >> 1, levelWidth - (renderW >> 1)]`. Camera stops when screen edge reaches level boundaries.
+   - For small boss arenas (e.g. Level 5 with 448 px width), the arena is centered, and `TileMap.c()` clamps tile column lookups to $[0, m - 1]$, extending boundary walls smoothly to both display edges.
+4. **Logic Isolation:**
+   - `Game.boolean_a(Actor)` preserves original 4:3 camera activation bounds ($ac_{4:3} \pm 140$ px, $ad \pm 180$ px).
+   - Inactive enemies on-screen are rendered without popping via `Actor.a()` widescreen bounds check.
+5. **HUD & Cutscene Anchoring:**
+   - Player HP/MP anchored to top-left; score and boss HP centered horizontally; dialog bubbles clamped to viewport; cutscenes centered with full-width framing bars.
+
+### 3. Verification & Playthrough (STEP 3)
+1. **Full Automated Playthrough (Level 1 & Level 2 with Widescreen ON):**
+   - Level 1 (800 px): 300 ticks rendered. Camera bounds [284, 516] px. 0 clamp violations, 0 empty edge seams, 0 pop-in anomalies. **PASSED**.
+   - Level 2 (2336 px): 300 ticks rendered. Camera bounds [284, 2052] px. 0 clamp violations, 0 empty edge seams, 0 pop-in anomalies. **PASSED**.
+2. **Bit-Identical Regression Suite (Widescreen OFF):**
+   - Traces: all 4 scenarios (608 simulation ticks) match line-for-line bit-identical. **PASSED**.
+   - Frames: all 7 reference frames match 100% pixel-for-pixel (76,800/76,800 pixels). **PASSED**.
+   - **ALL VALIDATIONS PASSED**.
+
+
 
 
 

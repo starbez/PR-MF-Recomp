@@ -334,7 +334,7 @@ public sealed class Actor
     public static void a(Actor[]? aArray, int n, int n2, int n3)
     {
         if (aArray == null) return;
-        int renderW = EngineTweaks.Widescreen ? EngineTweaks.WidescreenWidth : 240;
+        int renderW = EngineTweaks.RenderWidth;
         int n4 = -n - 10;
         int n5 = renderW - n + 10;
         int n6 = -n2 - 10;

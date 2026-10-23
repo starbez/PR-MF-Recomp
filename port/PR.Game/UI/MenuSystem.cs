@@ -39,7 +39,7 @@ public sealed class MenuSystem
     private readonly Action _onFullscreenToggle;
     private readonly Action _onWidescreenToggle;
 
-    public GameState State { get; private set; } = GameState.Title;
+    public GameState State { get; internal set; } = GameState.Title;
     public CoreGame? ActiveGame { get; private set; }
 
     private int _menuIndex = 0;

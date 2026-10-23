@@ -181,7 +181,7 @@ public sealed class Game
     public Actor[]? var_a_arr_g; // Enemies array
     public Actor[]? var_a_arr_h;
     public Actor[]? var_a_arr_i;
-    public Actor[] var_a_arr_b = new Actor[8];
+    public Actor[] var_a_arr_b = new Actor[25];
     public int[]? var_int_arr_d;
     public int[]? var_int_arr_e;
     public int[]? var_int_arr_f;
@@ -345,6 +345,14 @@ public sealed class Game
         int renderW = EngineTweaks.RenderWidth;
         int camX = EngineTweaks.Smooth60Fps ? RenderCamX : ac;
         int camY = EngineTweaks.Smooth60Fps ? RenderCamY : ad;
+        if (EngineTweaks.Widescreen)
+        {
+            int minCamX = renderW >> 1;
+            int maxCamX = var_c_arr_a != null && aj < var_c_arr_a.Length
+                ? Math.Max(minCamX, var_c_arr_a[aj].var_int_c - minCamX)
+                : minCamX;
+            camX = Math.Clamp(camX, minCamX, maxCamX);
+        }
         int n4 = camX - (renderW >> 1);
         int n5 = camY - (var_int_d >> 1);
 
@@ -355,6 +363,12 @@ public sealed class Game
             --aG;
             n4 += var_byte_arr_g[aG + aG];
             n5 += var_byte_arr_g[aG + aG + 1];
+        }
+
+        if (EngineTweaks.Widescreen)
+        {
+            gr.SetColor(0x0C0E14);
+            gr.FillRect(0, 0, renderW, var_int_d);
         }
 
         if (G == D)
@@ -764,7 +778,7 @@ public sealed class Game
                 var_int_arr_e = new int[var_a_arr_g.Length];
             }
 
-            var_int_c = App.var_int_a;
+            var_int_c = EngineTweaks.Widescreen ? EngineTweaks.RenderWidth : App.var_int_a;
             var_int_d = App.var_int_b;
             var_int_e = var_int_c >> 1;
             var_int_f = var_int_d >> 1;
@@ -826,6 +840,7 @@ public sealed class Game
             af = var_int_d >> 1;
             ag = var_c_arr_a[aj].var_int_c - (var_int_c >> 1);
             ah = var_c_arr_a[aj].d - (var_int_d >> 1);
+            if (ag < ae) ag = ae;
         }
     }
 
@@ -1347,7 +1362,8 @@ public sealed class Game
 
             if (var_boolean_r)
             {
-                aa = var_a_f.s == var_int_n ? var_a_f.var_int_d : var_a_f.var_int_d + (var_a_f.var_int_b == 1 ? var_int_c >> 2 : -var_int_c >> 2);
+                int lookahead = EngineTweaks.Widescreen ? (App.var_int_a >> 2) : (var_int_c >> 2);
+                aa = var_a_f.s == var_int_n ? var_a_f.var_int_d : var_a_f.var_int_d + (var_a_f.var_int_b == 1 ? lookahead : -lookahead);
             }
             if (var_boolean_s)
             {
@@ -2760,10 +2776,20 @@ public sealed class Game
 
     public bool boolean_a(Actor actor)
     {
-        return actor.int_e() - ac >= -var_int_e - 20 &&
-               actor.int_d() - ac <= var_int_e + 20 &&
-               actor.var_int_e - ad >= -var_int_f - 20 &&
-               actor.int_f() - ad <= var_int_f + 20;
+        int logicHalfW = 120;
+        int logicHalfH = 160;
+        int logicCamX = ac;
+        if (EngineTweaks.Widescreen && var_a_f != null && var_c_arr_a != null && aj < var_c_arr_a.Length)
+        {
+            int origMinX = logicHalfW;
+            int origMaxX = Math.Max(origMinX, var_c_arr_a[aj].var_int_c - logicHalfW);
+            int origLookahead = var_a_f.s == var_int_n ? 0 : (var_a_f.var_int_b == 1 ? 60 : -60);
+            logicCamX = Math.Clamp(var_a_f.var_int_d + origLookahead, origMinX, origMaxX);
+        }
+        return actor.int_e() - logicCamX >= -logicHalfW - 20 &&
+               actor.int_d() - logicCamX <= logicHalfW + 20 &&
+               actor.var_int_e - ad >= -logicHalfH - 20 &&
+               actor.int_f() - ad <= logicHalfH + 20;
     }
 
     private void n()

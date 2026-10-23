@@ -238,54 +238,25 @@ public sealed class TileMap
             var gr = GMIDlet.var_javax_microedition_lcdui_Graphics_a;
             if (gr == null || var_javax_microedition_lcdui_Image_b == null) return;
 
-            if (!EngineTweaks.Widescreen)
+            if (n5 > 0 && n6 > 0)
             {
-                if (n5 > 0 && n6 > 0)
-                {
-                    gr.SetClip(0, 0, n5, n6);
-                    gr.DrawImage(var_javax_microedition_lcdui_Image_b, -(n3 + (w << var_int_a)), -(n4 + (x << var_int_a)), 20);
-                }
-                if (n7 > 0 && n6 > 0)
-                {
-                    gr.SetClip(n5, 0, n7, n6);
-                    gr.DrawImage(var_javax_microedition_lcdui_Image_b, n5, -(n4 + (x << var_int_a)), 20);
-                }
-                if (n5 > 0 && n8 > 0)
-                {
-                    gr.SetClip(0, n6, n5, n8);
-                    gr.DrawImage(var_javax_microedition_lcdui_Image_b, -(n3 + (w << var_int_a)), n6, 20);
-                }
-                if (n7 > 0 && n8 > 0)
-                {
-                    gr.SetClip(n5, n6, n7, n8);
-                    gr.DrawImage(var_javax_microedition_lcdui_Image_b, n5, n6, 20);
-                }
-                return;
+                gr.SetClip(0, 0, n5, n6);
+                gr.DrawImage(var_javax_microedition_lcdui_Image_b, -(n3 + (w << var_int_a)), -(n4 + (x << var_int_a)), 20);
             }
-
-            int screenW = EngineTweaks.RenderWidth;
-            for (int ox = 0; ox < screenW; ox += s)
+            if (n7 > 0 && n6 > 0)
             {
-                if (n5 > 0 && n6 > 0 && ox < screenW)
-                {
-                    gr.SetClip(ox, 0, Math.Min(n5, screenW - ox), n6);
-                    gr.DrawImage(var_javax_microedition_lcdui_Image_b, ox - (n3 + (w << var_int_a)), -(n4 + (x << var_int_a)), 20);
-                }
-                if (n7 > 0 && n6 > 0 && ox + n5 < screenW)
-                {
-                    gr.SetClip(ox + n5, 0, Math.Min(n7, screenW - (ox + n5)), n6);
-                    gr.DrawImage(var_javax_microedition_lcdui_Image_b, ox + n5, -(n4 + (x << var_int_a)), 20);
-                }
-                if (n5 > 0 && n8 > 0 && ox < screenW)
-                {
-                    gr.SetClip(ox, n6, Math.Min(n5, screenW - ox), n8);
-                    gr.DrawImage(var_javax_microedition_lcdui_Image_b, ox - (n3 + (w << var_int_a)), n6, 20);
-                }
-                if (n7 > 0 && n8 > 0 && ox + n5 < screenW)
-                {
-                    gr.SetClip(ox + n5, n6, Math.Min(n7, screenW - (ox + n5)), n8);
-                    gr.DrawImage(var_javax_microedition_lcdui_Image_b, ox + n5, n6, 20);
-                }
+                gr.SetClip(n5, 0, n7, n6);
+                gr.DrawImage(var_javax_microedition_lcdui_Image_b, n5, -(n4 + (x << var_int_a)), 20);
+            }
+            if (n5 > 0 && n8 > 0)
+            {
+                gr.SetClip(0, n6, n5, n8);
+                gr.DrawImage(var_javax_microedition_lcdui_Image_b, -(n3 + (w << var_int_a)), n6, 20);
+            }
+            if (n7 > 0 && n8 > 0)
+            {
+                gr.SetClip(n5, n6, n7, n8);
+                gr.DrawImage(var_javax_microedition_lcdui_Image_b, n5, n6, 20);
             }
             return;
         }
@@ -320,7 +291,8 @@ public sealed class TileMap
 
     private void c(int n, int n2)
     {
-        int n3 = int_b(int_a(n, m), int_a(n2, this.n));
+        int col = EngineTweaks.Widescreen ? Math.Clamp(n, 0, m - 1) : int_a(n, m);
+        int n3 = int_b(col, int_a(n2, this.n));
         int n4 = (var_byte_arr_c != null && n3 < var_byte_arr_c.Length) ? (var_byte_arr_c[n3] & 0xC0) : 0;
         if (!var_boolean_a && n3 == 0) return;
 
@@ -357,12 +329,19 @@ public sealed class TileMap
         d = totalRows << var_int_a;
         y = ((s + (var_int_b >> 1) + 1) >> var_int_a) + 1;
         z = ((t + (var_int_b >> 1) + 1) >> var_int_a) + 1;
-        if (y > totalCols) y = totalCols;
-        if (z > totalRows) z = totalRows;
+        if (!EngineTweaks.Widescreen)
+        {
+            if (y > totalCols) y = totalCols;
+            if (z > totalRows) z = totalRows;
+        }
         o = x1 * m;
         p = y1 * m;
         q = x2 * m - y;
         r = y2 * n - z;
+        if (EngineTweaks.Widescreen && q < o)
+        {
+            q = o;
+        }
         u = -1073741824;
     }
 
