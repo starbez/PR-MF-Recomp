@@ -1,0 +1,32 @@
+# Game binaries & assets (strictly never commit)
+JAR/
+*.jar
+extracted/
+decompiled/
+traces/
+frames/
+sons/
+extracted_png/
+
+# Local tools & SDKs
+tools/cfr.jar
+tools/dotnet/
+dist/
+dotnet-install*
+*.ps1
+
+# .NET / C# build outputs
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+
+# Python caches
+__pycache__/
+*.pyc
+
+# OS files
+Thumbs.db
+Desktop.ini
