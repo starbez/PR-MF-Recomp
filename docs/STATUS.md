@@ -242,8 +242,24 @@ Analysis of problems (a) through (i):
    - Frames: all 7 reference frames match 100% pixel-for-pixel (76,800/76,800 pixels). **PASSED**.
    - **ALL VALIDATIONS PASSED**.
 
+## Status after Language Alignment & English Default Fix
 
+### 1. What is Done
+- Diagnosed language discrepancy:
+  - `extracted/lang` defines `["de", "en", "fr", "it"]` (0=de, 1=en, 2=fr, 3=it).
+  - `SaveData.cs` and `MenuSystem.cs` assumed 0=de, 1=en, 2=fr, 3=it.
+  - `App.cs` previously had `{"en", "de", "fr", "it"}`, causing a mismatch where selecting "ENGLISH" (index 1) loaded `text__de.txt` (German) into the game runtime.
+- Aligned `App.var_java_lang_String_arr_b` to `{ "de", "en", "fr", "it" }`:
+  - `PR.Core.App.var_byte_d` defaults to `0` for the uncustomized engine baseline, keeping `PR.TraceTest` and `ValidateFrames` bit-identical (100% pixel match against reference frames).
+  - `PR.Game` runtime defaults to English (`LanguageIndex = 1`, `text__en.txt`), correctly displaying English HUD ("Score"), skip prompt ("Skip"), menus, and story dialogue bubbles.
+  - Settings menu language switcher and CLI `--lang` flags cleanly map to all 4 supported languages.
 
+### 2. What is Verified vs. Inferred
+- **Reference Frame Validation: [verified]**
+  - Running `tools/run_tests.ps1` confirms all 608 simulation ticks and 7 reference frames pass 100% pixel-identical (`ALL VALIDATIONS PASSED`).
+- **English Text Loading: [verified]**
+  - Verified `text__en.txt` strings load into `App.var_java_lang_String_arr_a` and story groups `App.var_java_lang_String_arr_arr_a`.
 
-
+### 3. What is Still Unknown
+- None. Game is in English, verified bit-identical in tests, and options menu language switching works seamlessly.
 

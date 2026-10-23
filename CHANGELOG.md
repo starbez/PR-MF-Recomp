@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.2] - In-Game Language Alignment & English Default
+### Fixed
+- **Language Array Index Alignment (`App.cs`, `MenuSystem.cs`, `SaveData.cs`):**
+  - Aligned `App.var_java_lang_String_arr_b` with the original Living Mobile ROM `/lang` structure: `{ "de", "en", "fr", "it" }` (0=de, 1=en, 2=fr, 3=it).
+  - Corrected `App.var_byte_d` default in `PR.Core` to 0 (matching the German baseline of the Nokia ROM), ensuring the test harness (`PR.TraceTest` / `ValidateFrames`) continues to pass 100% bit-identical against the original reference frames without divergence.
+  - Ensured `PR.Game` loads English (`LanguageIndex = 1`, `text__en.txt`) by default via `SaveData`, displaying English HUD labels ("Score"), prompts ("Skip"), menus, and story dialogue bubbles.
+  - Synchronized Settings menu (`MenuSystem.cs`) language cycling and CLI `--lang` flags (`en`, `de`, `fr`, `it`) with runtime localized text loading.
+
 ## [1.5.1] - Character Visibility & Interpolation Fix
 ### Fixed
 - **Player Character Visibility in Smooth 60 FPS (`Actor.cs`, `Game.cs`):**

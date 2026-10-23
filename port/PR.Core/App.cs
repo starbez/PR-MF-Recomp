@@ -16,7 +16,7 @@ public sealed class App
     public static int var_int_b = DefaultCanvasHeight;
     public static int var_int_g = 0; // Cumulative score
 
-    public static readonly string[] var_java_lang_String_arr_b = { "en", "de", "fr", "it" };
+    public static readonly string[] var_java_lang_String_arr_b = { "de", "en", "fr", "it" };
     public static string[]? var_java_lang_String_arr_a;
     public static string[][]? var_java_lang_String_arr_arr_a;
 
@@ -49,7 +49,7 @@ public sealed class App
     public static int w;
     public static sbyte var_byte_e;
     public static byte var_byte_b; // Options (sound/vib)
-    public static byte var_byte_d = 1; // Language (1=en)
+    public static byte var_byte_d = 0; // Language (0=de default in original Java ROM)
 
     public static byte[]? var_byte_arr_a; // In-memory save blob
 
