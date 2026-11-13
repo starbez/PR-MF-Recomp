@@ -315,6 +315,152 @@ public class Program
             suitePassed = false;
         }
 
+        // TEST 5: Elevator (Moving Platform) Landing & Riding Invariants
+        Console.WriteLine("\n[QA 5/5] Testing Elevator (Moving Platform) Landing & Riding Invariants...");
+        try
+        {
+            int elevatorLevelsTested = 0;
+            for (int lvl = 0; lvl <= 12; lvl++)
+            {
+                Game.G = lvl;
+                Game.F = 0;
+                Game.var_boolean_e = false;
+                Game.var_java_util_Random_a = new JavaRandom(42L);
+
+                var platGame = new Game(app);
+                Game.var_f_a = platGame;
+                app.var_f_a = platGame;
+                platGame.e();
+
+                if (platGame.var_a_arr_h != null && platGame.var_a_arr_h.Length > 0)
+                {
+                    elevatorLevelsTested++;
+                    var plat = platGame.var_a_arr_h[0];
+                    var player = Game.var_a_f!;
+
+                    // 1. Position player directly above platform, in authentic falling state (var_byte_a = 8, curve vy >= +1)
+                    player.var_int_d = plat.var_int_d;
+                    player.var_int_e = plat.var_int_e - 10;
+                    player.var_int_n = plat.var_int_e - 20;
+                    player.t = 3; // Falling
+                    player.var_byte_a = 8;
+
+                    // Tick simulation until player lands or times out
+                    bool landed = false;
+                    for (int tick = 0; tick < 10; tick++)
+                    {
+                        platGame.boolean_b();
+                        if (player.var_boolean_b && player.var_int_e == plat.var_int_e && (player.t == 0 || player.t == 1))
+                        {
+                            landed = true;
+                            break;
+                        }
+                    }
+                    if (!landed)
+                    {
+                        Console.WriteLine($"  FAIL: Level {lvl} Player failed to land on elevator! Grounded={player.var_boolean_b}, PlayerY={player.var_int_e}, PlatY={plat.var_int_e}, State={player.t}");
+                        suitePassed = false;
+                    }
+                    else
+                    {
+                        // 2. Test riding elevator moving DOWN naturally via simulation tick
+                        plat.var_int_g = 4;
+                        platGame.boolean_b();
+
+                        bool rodeDown = player.var_boolean_b && player.var_int_e == plat.var_int_e;
+                        if (!rodeDown)
+                        {
+                            Console.WriteLine($"  FAIL: Level {lvl} Player did not ride elevator down! Grounded={player.var_boolean_b}, PlayerY={player.var_int_e}, PlatY={plat.var_int_e}");
+                            suitePassed = false;
+                        }
+                        else
+                        {
+                            // 3. Test riding elevator moving UP naturally via simulation tick
+                            plat.var_int_g = -4;
+                            platGame.boolean_b();
+
+                            bool rodeUp = player.var_boolean_b && player.var_int_e == plat.var_int_e;
+                            if (!rodeUp)
+                            {
+                                Console.WriteLine($"  FAIL: Level {lvl} Player did not ride elevator up! Grounded={player.var_boolean_b}, PlayerY={player.var_int_e}, PlatY={plat.var_int_e}");
+                                suitePassed = false;
+                            }
+                            else
+                            {
+                                // 4. Test jumping up from below (one-way pass-through: should NOT land or get blocked while moving up)
+                                player.var_int_d = plat.var_int_d;
+                                player.var_int_e = plat.var_int_e + 20;
+                                player.var_int_n = plat.var_int_e + 30;
+                                player.t = 2; // Jumping up
+                                player.var_byte_a = 0; // upward curve vy = -12
+                                platGame.boolean_b();
+
+                                bool passedThrough = player.t == 2 && player.var_int_e < plat.var_int_e + 20;
+                                if (!passedThrough)
+                                {
+                                    Console.WriteLine($"  FAIL: Level {lvl} Player failed one-way pass-through from below!");
+                                    suitePassed = false;
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"  PASSED Level {lvl}: Elevator landing, down-ride, up-ride, and one-way pass-through verified (Platform count: {platGame.var_a_arr_h.Length}).");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (elevatorLevelsTested == 0)
+            {
+                Console.WriteLine("  WARNING: No levels with elevators found in levels 0..12!");
+                // Also synthesize a platform to verify the logic directly
+                var synGame = new Game(app);
+                Game.var_f_a = synGame;
+                app.var_f_a = synGame;
+                Game.G = 0;
+                Game.F = 0;
+                synGame.e();
+
+                var synPlat = new Actor();
+                synPlat.var_int_d = 100;
+                synPlat.var_int_e = 100;
+                synPlat.var_int_n = 100;
+                synPlat.var_byte_d = 4;
+                synPlat.var_boolean_a = true;
+                synPlat.var_boolean_j = true;
+                synGame.var_a_arr_h = new Actor[] { synPlat };
+                synGame.var_int_arr_f = new int[] { 50 };
+
+                var player = Game.var_a_f!;
+                player.var_int_d = synPlat.var_int_d;
+                player.var_int_e = synPlat.var_int_e - 4;
+                player.var_int_n = synPlat.var_int_e - 16;
+                player.t = 3;
+
+                synGame.boolean_b();
+                bool landed = player.var_boolean_b && player.var_int_e == synPlat.var_int_e;
+                if (!landed)
+                {
+                    Console.WriteLine($"  FAIL: Player failed to land on synthetic elevator! Grounded={player.var_boolean_b}, PlayerY={player.var_int_e}, PlatY={synPlat.var_int_e}");
+                    suitePassed = false;
+                }
+                else
+                {
+                    Console.WriteLine("  PASSED: Synthetic elevator landing verified.");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"  Elevators verified successfully across {elevatorLevelsTested} level(s).");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"  FAIL: Elevator test exception: {ex.Message}");
+            suitePassed = false;
+        }
+
         return suitePassed;
     }
 

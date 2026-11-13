@@ -91,6 +91,7 @@ public sealed class App
             using var dis = new DataReader(stream);
 
             var_int_l = dis.ReadByte();
+            Game.var_byte_arr_e = new byte[var_int_l];
             int scoreCount = dis.ReadShort();
             int[] scoreTable = new int[scoreCount];
             for (int i = 0; i < scoreCount; ++i)

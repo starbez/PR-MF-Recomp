@@ -1198,7 +1198,7 @@ public sealed class Game
 
                 if (@as != -1)
                 {
-                    int tileX = var_a_f.var_int_d / TileMap.var_int_b;
+                    int tileX = var_a_f!.var_int_d / TileMap.var_int_b;
                     if (tileX == @as)
                     {
                         Q = 0;
@@ -1214,7 +1214,7 @@ public sealed class Game
                 }
 
                 var_boolean_k = false;
-                if (!(var_a_f.var_boolean_d || var_a_f.var_boolean_c || var_a_f.var_boolean_e ||
+                if (!(var_a_f!.var_boolean_d || var_a_f.var_boolean_c || var_a_f.var_boolean_e ||
                       var_int_g == 0 || var_a_f.boolean_a(1) || var_a_f.x == 20))
                 {
                     if (Q == 128)
@@ -1390,7 +1390,7 @@ public sealed class Game
             if (var_boolean_r)
             {
                 int lookahead = EngineTweaks.Widescreen ? (App.var_int_a >> 2) : (var_int_c >> 2);
-                aa = var_a_f.s == var_int_n ? var_a_f.var_int_d : var_a_f.var_int_d + (var_a_f.var_int_b == 1 ? lookahead : -lookahead);
+                aa = var_a_f!.s == var_int_n ? var_a_f.var_int_d : var_a_f.var_int_d + (var_a_f.var_int_b == 1 ? lookahead : -lookahead);
             }
             if (var_boolean_s)
             {
@@ -1421,7 +1421,7 @@ public sealed class Game
                 else if (ac > ag) ac = ag;
             }
 
-            if (var_boolean_r && var_a_f.var_byte_arr_a != null)
+            if (var_boolean_r && var_a_f!.var_byte_arr_a != null)
             {
                 ab = var_a_f.var_int_e + (var_a_f.var_byte_arr_a[0] >> 1);
             }
@@ -1688,22 +1688,26 @@ public sealed class Game
 
     private void a(Actor actor, int platIdx)
     {
-        if (var_a_arr_h == null) return;
+        if (var_a_arr_h == null || platIdx >= var_a_arr_h.Length) return;
         Actor plat = var_a_arr_h[platIdx];
-        if (!plat.var_boolean_j || !plat.var_boolean_a) return;
-
-        if (actor.var_int_e <= plat.var_int_e && actor.var_int_e >= plat.var_int_e - 6 &&
-            actor.int_e() >= plat.int_d() && actor.int_d() <= plat.int_e() &&
-            actor.var_int_n <= plat.var_int_n)
+        if (actor.int_d() <= plat.int_e() && actor.int_e() >= plat.int_d())
         {
-            actor.var_int_e = plat.var_int_e;
-            actor.var_int_g = 0;
-            actor.var_boolean_b = true;
-            if (actor.t == 3)
+            int n2 = actor.var_int_e - plat.var_int_e;
+            int n3 = actor.var_int_n - plat.var_int_n;
+            if (n2 * n3 > 0)
             {
-                actor.t = 0;
-                actor.a(1, false);
-                actor.var_int_f = 0;
+                return;
+            }
+            int n4 = actor.var_int_e - actor.var_int_n;
+            if (n4 >= 0)
+            {
+                actor.var_boolean_b = true;
+                void_a(actor, 0, plat.var_int_e - actor.var_int_e);
+                if (actor.t == 2 || actor.t == 3)
+                {
+                    actor.t = 0;
+                    actor.a(1, false);
+                }
             }
         }
     }
@@ -2810,6 +2814,27 @@ public sealed class Game
             H = G + 1;
         }
         var_boolean_p = true;
+    }
+
+    public static void g()
+    {
+        var_boolean_e = false;
+        App.var_int_g = 0;
+        H = 0;
+        I = 0;
+        F = 0;
+        G = 0;
+        J = 0;
+        K = 8;
+        L = 7;
+        if (var_byte_arr_e != null)
+        {
+            Array.Clear(var_byte_arr_e, 0, var_byte_arr_e.Length);
+        }
+        if (App.var_byte_arr_d != null && var_byte_arr_f != null)
+        {
+            Array.Copy(App.var_byte_arr_d, var_byte_arr_f, Math.Min(App.var_byte_arr_d.Length, var_byte_arr_f.Length));
+        }
     }
 
     public static void void_a(DataReader dis)
