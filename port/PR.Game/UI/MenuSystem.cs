@@ -179,7 +179,7 @@ public sealed class MenuSystem
                         _saveManager.Data.HighestUnlockedLevel = Math.Clamp(CoreGame.H, 1, 12);
                         _saveManager.Save();
 
-                        if (!_isSurvivalMode && finishedLevel < CoreGame.D)
+                        if (!_isSurvivalMode && finishedLevel < 12)
                         {
                             // Move straight into the next level with accumulated score!
                             int nextLevel = finishedLevel + 1;
@@ -187,7 +187,7 @@ public sealed class MenuSystem
                             StartGame(nextLevel, _selectedCharacter, survival: false);
                             return;
                         }
-                        else if (!_isSurvivalMode && finishedLevel >= CoreGame.D)
+                        else if (!_isSurvivalMode && finishedLevel >= 12)
                         {
                             // Beat the entire game!
                             bool qualifies = _saveManager.CheckHighScore(_lastFinalScore, _isSurvivalMode, out _);
@@ -365,13 +365,13 @@ public sealed class MenuSystem
 
     private void HandleCharacterSelectInput(int key)
     {
-        if (key == -3) // LEFT
+        if (key == -3 || key == -1) // LEFT or UP
         {
             _selectedCharacter = (_selectedCharacter - 1 + 5) % 5;
             _saveManager.Data.SelectedCharacter = _selectedCharacter;
             _saveManager.Save();
         }
-        else if (key == -4) // RIGHT
+        else if (key == -4 || key == -2) // RIGHT or DOWN
         {
             _selectedCharacter = (_selectedCharacter + 1) % 5;
             _saveManager.Data.SelectedCharacter = _selectedCharacter;
@@ -381,7 +381,7 @@ public sealed class MenuSystem
         {
             if (_isSurvivalMode)
             {
-                StartGame(CoreGame.D, _selectedCharacter, true);
+                StartGame(0, _selectedCharacter, true);
             }
             else
             {
@@ -426,7 +426,7 @@ public sealed class MenuSystem
         {
             if (_selectedLevel == 13)
             {
-                StartGame(CoreGame.D, _selectedCharacter, true);
+                StartGame(0, _selectedCharacter, true);
             }
             else if (_selectedLevel <= maxLvl)
             {
@@ -778,6 +778,10 @@ public sealed class MenuSystem
 
     public void StartGame(int level, int character, bool survival)
     {
+        if (survival) level = 0;
+        _isSurvivalMode = survival;
+        _selectedLevel = level;
+        _selectedCharacter = character;
         CoreGame.G = level;
         CoreGame.F = character;
         CoreGame.var_boolean_e = survival;
@@ -1803,11 +1807,35 @@ public sealed class MenuSystem
                 break;
 
             case GameState.CharacterSelect:
-                if (leftClick)
                 {
-                    if (localX < centerX - 70 && localY >= 30 && localY <= 65) HandleCharacterSelectInput(-3);
-                    else if (localX > centerX + 70 && localY >= 30 && localY <= 65) HandleCharacterSelectInput(-4);
-                    else if (localY >= 270) HandleCharacterSelectInput(-5);
+                    int startY = 38;
+                    const int itemH = 22;
+                    int boxW = 180;
+                    int boxX = centerX - (boxW / 2);
+
+                    if (localX >= boxX && localX <= boxX + boxW && localY >= startY && localY < startY + 5 * itemH)
+                    {
+                        int clickedIdx = (int)((localY - startY) / itemH);
+                        if (clickedIdx >= 0 && clickedIdx < 5)
+                        {
+                            if (_selectedCharacter != clickedIdx)
+                            {
+                                _selectedCharacter = clickedIdx;
+                                _saveManager.Data.SelectedCharacter = _selectedCharacter;
+                                _saveManager.Save();
+                            }
+                            else if (leftClick)
+                            {
+                                HandleCharacterSelectInput(-5);
+                            }
+                        }
+                    }
+                    else if (leftClick)
+                    {
+                        if (localX < centerX - 70 && localY >= 30 && localY <= 65) HandleCharacterSelectInput(-3);
+                        else if (localX > centerX + 70 && localY >= 30 && localY <= 65) HandleCharacterSelectInput(-4);
+                        else if (localY >= 270) HandleCharacterSelectInput(-5);
+                    }
                 }
                 break;
 
@@ -1847,7 +1875,7 @@ public sealed class MenuSystem
                         {
                             if (_selectedLevel == 13)
                             {
-                                StartGame(CoreGame.D, _selectedCharacter, true);
+                                StartGame(0, _selectedCharacter, true);
                             }
                             else
                             {

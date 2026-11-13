@@ -133,18 +133,25 @@ public sealed class GameView : IDisposable
         if (canvas == null) return;
         _activeCanvasWidth = canvas.Width;
 
-        int count = Math.Min(canvas.Width * canvas.Height, MaxWidth * BaseHeight);
+        int w = Math.Min(canvas.Width, MaxWidth);
+        int h = Math.Min(canvas.Height, BaseHeight);
+
         fixed (uint* src = canvas.Pixels)
         {
             Color* dst = (Color*)_raylibImage.Data;
-            for (int i = 0; i < count; i++)
+            for (int y = 0; y < h; y++)
             {
-                uint pixel = src[i];
-                byte a = (byte)(pixel >> 24);
-                byte r = (byte)(pixel >> 16);
-                byte g = (byte)(pixel >> 8);
-                byte b = (byte)pixel;
-                dst[i] = new Color(r, g, b, a);
+                int srcRow = y * canvas.Width;
+                int dstRow = y * MaxWidth;
+                for (int x = 0; x < w; x++)
+                {
+                    uint pixel = src[srcRow + x];
+                    byte a = (byte)(pixel >> 24);
+                    byte r = (byte)(pixel >> 16);
+                    byte g = (byte)(pixel >> 8);
+                    byte b = (byte)pixel;
+                    dst[dstRow + x] = new Color(r, g, b, a);
+                }
             }
         }
 
