@@ -91,7 +91,7 @@ public sealed class App
             using var dis = new DataReader(stream);
 
             var_int_l = dis.ReadByte();
-            Game.var_byte_arr_e = new byte[var_int_l];
+            Game.var_byte_arr_e = new byte[Math.Max(var_int_l, 16)];
             int scoreCount = dis.ReadShort();
             int[] scoreTable = new int[scoreCount];
             for (int i = 0; i < scoreCount; ++i)
@@ -102,7 +102,8 @@ public sealed class App
 
             var_byte_arr_d = new byte[dis.ReadShort()];
             dis.ReadFully(var_byte_arr_d);
-            Game.var_byte_arr_f = new byte[var_byte_arr_d.Length];
+            Game.var_byte_arr_f = new byte[Math.Max(var_byte_arr_d.Length, 32)];
+            Array.Copy(var_byte_arr_d, Game.var_byte_arr_f, var_byte_arr_d.Length);
 
             Game.var_byte_arr_a = new byte[dis.ReadShort()];
             dis.ReadFully(Game.var_byte_arr_a);

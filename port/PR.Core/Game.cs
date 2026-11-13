@@ -939,7 +939,7 @@ public sealed class Game
             a2.a(0, false);
             var_a_arr_e[i] = a2;
             var_int_arr_d[i] = -1;
-            if (i < 3 && a2.s == var_int_o && var_byte_arr_e != null)
+            if (i < 3 && a2.s == var_int_o && var_byte_arr_e != null && G < var_byte_arr_e.Length)
             {
                 a2.var_boolean_a = (var_byte_arr_e[G] & (1 << i)) == 0;
             }
@@ -1003,7 +1003,7 @@ public sealed class Game
             a5.void_h();
             a5.d(-1);
             a5.void_k();
-            if (a5.s == var_int_p && i == decoCount - 1 && var_byte_arr_e != null)
+            if (a5.s == var_int_p && i == decoCount - 1 && var_byte_arr_e != null && G < var_byte_arr_e.Length)
             {
                 a5.a((var_byte_arr_e[G] & 8) == 0 ? 0 : 2, false);
             }
@@ -2246,11 +2246,11 @@ public sealed class Game
                             am = ++L * 64;
                             a(var_a_f, 2, 10, 110, 50);
                         }
-                        if (i == 0 && var_byte_arr_f != null)
+                        if (i == 0 && var_byte_arr_f != null && G + G - 1 >= 0 && G + G - 1 < var_byte_arr_f.Length)
                         {
                             var_byte_arr_f[G + G - 1] = 5;
                         }
-                        if (i < 3 && var_byte_arr_e != null)
+                        if (i < 3 && var_byte_arr_e != null && G < var_byte_arr_e.Length)
                         {
                             var_byte_arr_e[G] = (byte)(var_byte_arr_e[G] | (1 << i));
                         }
@@ -2592,7 +2592,7 @@ public sealed class Game
                         if (var_byte_arr_g != null) aG = var_byte_arr_g.Length >> 1;
                         break;
                     case 19:
-                        if (var_byte_arr_e != null && (var_byte_arr_e[G] & 8) != 0)
+                        if (var_byte_arr_e != null && G < var_byte_arr_e.Length && (var_byte_arr_e[G] & 8) != 0)
                         {
                             var_short_arr_arr_a[scriptIdx][0] = 0;
                             return;

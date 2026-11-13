@@ -41,7 +41,7 @@ public sealed class ZipResourceProvider : IResourceProvider
     public Stream? OpenResource(string path)
     {
         var entry = FindEntry(path);
-        if (entry == null) return null;
+        if (entry == null) return CustomResources.TryOpen(path);
         var ms = new MemoryStream((int)entry.Length);
         using (var s = entry.Open())
         {
@@ -54,7 +54,11 @@ public sealed class ZipResourceProvider : IResourceProvider
     public byte[]? GetResourceBytes(string path)
     {
         var entry = FindEntry(path);
-        if (entry == null) return null;
+        if (entry == null)
+        {
+            if (CustomResources.TryGet(path, out var data)) return data;
+            return null;
+        }
         byte[] bytes = new byte[entry.Length];
         using (var s = entry.Open())
         {
@@ -71,7 +75,7 @@ public sealed class ZipResourceProvider : IResourceProvider
 
     public bool ResourceExists(string path)
     {
-        return FindEntry(path) != null;
+        return FindEntry(path) != null || CustomResources.TryGet(path, out _);
     }
 
     public void Dispose()

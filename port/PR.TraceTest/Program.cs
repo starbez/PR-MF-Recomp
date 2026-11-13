@@ -461,6 +461,60 @@ public class Program
             suitePassed = false;
         }
 
+        // TEST 6: Custom Titan Megazord Level 13 Encounter
+        Console.WriteLine("\n[QA 6/6] Testing Custom Titan Megazord Level 13 Encounter...");
+        try
+        {
+            Game.G = 13;
+            Game.F = 0;
+            Game.var_boolean_e = false;
+            Game.var_java_util_Random_a = new JavaRandom(42L);
+
+            var zordGame = new Game(app);
+            Game.var_f_a = zordGame;
+            app.var_f_a = zordGame;
+            zordGame.e();
+
+            // 1. Verify player is Titan Megazord
+            if (Game.var_a_f == null || Game.var_a_f.s != Game.var_int_n)
+            {
+                Console.WriteLine($"  FAIL: Expected Titan Megazord player (s={Game.var_int_n}), got s={(Game.var_a_f?.s ?? -1)}");
+                suitePassed = false;
+            }
+            else if (zordGame.var_a_arr_g == null || zordGame.var_a_arr_g.Length < 2)
+            {
+                Console.WriteLine($"  FAIL: Expected Morticon and Koragg bosses spawned, got {zordGame.var_a_arr_g?.Length ?? 0} enemies");
+                suitePassed = false;
+            }
+            else
+            {
+                var morticon = zordGame.var_a_arr_g[0];
+                var koragg = zordGame.var_a_arr_g[1];
+                Console.WriteLine($"  Player initialized: Titan Megazord (s={Game.var_a_f.s}, HP={Game.var_a_f.A}, pos=({Game.var_a_f.var_int_d},{Game.var_a_f.var_int_e}))");
+                Console.WriteLine($"  Boss 1 initialized: Morticon (s={morticon.s}, HP={morticon.A}, pos=({morticon.var_int_d},{morticon.var_int_e}))");
+                Console.WriteLine($"  Boss 2 initialized: Koragg (s={koragg.s}, HP={koragg.A}, pos=({koragg.var_int_d},{koragg.var_int_e}))");
+
+                // 2. Simulate 40 ticks of combat simulation
+                for (int t = 0; t < 40; t++)
+                {
+                    zordGame.boolean_b();
+                }
+
+                // 3. Simulate attack input from Megazord
+                zordGame.void_a(-5); // Attack key press
+                zordGame.boolean_b();
+                zordGame.b(-5); // Attack key release
+                zordGame.boolean_b();
+
+                Console.WriteLine($"  PASSED: Titan Megazord Level 13 loaded and simulated 40 ticks without errors.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"  FAIL: Titan Megazord Level 13 exception: {ex}");
+            suitePassed = false;
+        }
+
         return suitePassed;
     }
 

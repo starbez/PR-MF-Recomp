@@ -865,6 +865,42 @@ public static class Program
             allPassed = false;
         }
 
+        // 6. Custom Titan Megazord Level 13 Verification
+        Console.WriteLine("\n[QA 6/6] Testing Custom Titan Megazord Level 13 Encounter...");
+        try
+        {
+            CoreGame.G = 13;
+            CoreGame.F = 0;
+            CoreGame.var_boolean_e = false;
+            CoreGame.var_java_util_Random_a = new JavaRandom(42L);
+
+            var zordGame = new CoreGame(app);
+            CoreGame.var_f_a = zordGame;
+            app.var_f_a = zordGame;
+            zordGame.e();
+
+            if (CoreGame.var_a_f == null || CoreGame.var_a_f.s != CoreGame.var_int_n)
+            {
+                Console.WriteLine($"  FAIL: Expected Titan Megazord (s={CoreGame.var_int_n}), got s={(CoreGame.var_a_f?.s ?? -1)}");
+                allPassed = false;
+            }
+            else if (zordGame.var_a_arr_g == null || zordGame.var_a_arr_g.Length < 2)
+            {
+                Console.WriteLine($"  FAIL: Expected Morticon and Koragg bosses, got {zordGame.var_a_arr_g?.Length ?? 0} enemies");
+                allPassed = false;
+            }
+            else
+            {
+                for (int t = 0; t < 30; t++) zordGame.boolean_b();
+                Console.WriteLine($"  PASSED: Titan Megazord encounter simulated successfully (Player HP: {CoreGame.var_a_f.A}, Bosses: Morticon & Koragg).");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"  FAIL: Titan Megazord test exception: {ex.Message}");
+            allPassed = false;
+        }
+
         Console.WriteLine("\n==================================================");
         if (allPassed)
         {

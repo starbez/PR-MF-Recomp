@@ -25,7 +25,7 @@ public sealed class FolderResourceProvider : IResourceProvider
         {
             return File.OpenRead(full);
         }
-        return null;
+        return CustomResources.TryOpen(path);
     }
 
     public byte[]? GetResourceBytes(string path)
@@ -35,12 +35,16 @@ public sealed class FolderResourceProvider : IResourceProvider
         {
             return File.ReadAllBytes(full);
         }
+        if (CustomResources.TryGet(path, out var data))
+        {
+            return data;
+        }
         return null;
     }
 
     public bool ResourceExists(string path)
     {
-        return File.Exists(ResolvePath(path));
+        return File.Exists(ResolvePath(path)) || CustomResources.TryGet(path, out _);
     }
 
     public void Dispose()

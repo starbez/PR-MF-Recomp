@@ -82,7 +82,8 @@ public sealed class MenuSystem
         new("UNDERWORLD GATE", "The outer perimeter gate of Morticon's dark fortress.", "Breach the gate defenses and storm the entryway."),
         new("FORTRESS SANCTUM", "Infiltrate deep into the Underworld stronghold.", "Defeat Morticon's elite royal bodyguards in the hall."),
         new("FINAL BATTLE: MORTICON", "MORTICON awaits in the Throne Room of Darkness!", "Unleash all Mystic power to banish Morticon forever!"),
-        new("SURVIVAL ARENA", "An endless gauntlet against relentless demonic legions.", "How many enemy waves can your Mystic Ranger survive?")
+        new("SURVIVAL ARENA", "An endless gauntlet against relentless demonic legions.", "How many enemy waves can your Mystic Ranger survive?"),
+        new("TITAN MEGAZORD CLASH", "Morticon and Koragg unleash their darkness upon the Citadel!", "Deploy the Titan Megazord to defeat the demonic lords in epic combat!")
     };
 
     private readonly Actor?[] _characterPreviews = new Actor?[5];
@@ -400,33 +401,41 @@ public sealed class MenuSystem
         int maxLvl = Math.Min(12, Math.Max(1, _saveManager.Data.HighestUnlockedLevel));
         if (key == -3) // LEFT
         {
-            if (_selectedLevel == 13) _selectedLevel = 12;
+            if (_selectedLevel == 14) _selectedLevel = 13;
+            else if (_selectedLevel == 13) _selectedLevel = 12;
             else if (_selectedLevel > 1) _selectedLevel--;
-            else _selectedLevel = 13;
+            else _selectedLevel = 14;
         }
         else if (key == -4) // RIGHT
         {
-            if (_selectedLevel == 13) _selectedLevel = 1;
+            if (_selectedLevel == 13) _selectedLevel = 14;
+            else if (_selectedLevel == 14) _selectedLevel = 1;
             else if (_selectedLevel < 13) _selectedLevel++;
             else _selectedLevel = 1;
         }
         else if (key == -1) // UP
         {
             if (_selectedLevel == 13) _selectedLevel = 10;
+            else if (_selectedLevel == 14) _selectedLevel = 11;
             else if (_selectedLevel > 4) _selectedLevel -= 4;
-            else _selectedLevel = 13;
+            else _selectedLevel = (_selectedLevel <= 2) ? 13 : 14;
         }
         else if (key == -2) // DOWN
         {
             if (_selectedLevel <= 8) _selectedLevel += 4;
-            else if (_selectedLevel <= 12) _selectedLevel = 13;
-            else _selectedLevel = 1;
+            else if (_selectedLevel == 9 || _selectedLevel == 10) _selectedLevel = 13;
+            else if (_selectedLevel == 11 || _selectedLevel == 12) _selectedLevel = 14;
+            else _selectedLevel = (_selectedLevel == 13) ? 1 : 3;
         }
         else if (key == -5 || key == -6 || key == 53) // START LEVEL
         {
             if (_selectedLevel == 13)
             {
                 StartGame(0, _selectedCharacter, true);
+            }
+            else if (_selectedLevel == 14)
+            {
+                StartGame(13, _selectedCharacter, false);
             }
             else if (_selectedLevel <= maxLvl)
             {
@@ -1325,27 +1334,52 @@ public sealed class MenuSystem
             }
         }
 
-        // Survival Arena Row (Level 13)
-        int survX = startX;
+        // Row 3: Survival Arena and Titan Megazord (Levels 13 & 14)
         int survY = 114;
+        int btnW = 102;
+        int surv1X = startX;
+        int surv2X = startX + 107;
+
+        // Level 13: Survival Arena
         bool isSurvSelected = _selectedLevel == 13;
         if (isSurvSelected)
         {
             gr.SetColor(0xFFD700);
-            gr.DrawRect(survX - 1, survY - 1, 211, 23);
+            gr.DrawRect(surv1X - 1, survY - 1, btnW + 2, 23);
             gr.SetColor(0xFFFFFF);
-            gr.DrawRect(survX, survY, 209, 21);
+            gr.DrawRect(surv1X, survY, btnW, 21);
             gr.SetColor(0x601418);
-            gr.FillRect(survX + 1, survY + 1, 208, 20);
-            GMIDlet.a(3, "★ SURVIVAL ARENA ★", centerX, survY + 4, 17);
+            gr.FillRect(surv1X + 1, survY + 1, btnW - 1, 20);
+            GMIDlet.a(3, "★ SURVIVAL ★", surv1X + (btnW / 2), survY + 4, 17);
         }
         else
         {
             gr.SetColor(0x8B7500);
-            gr.DrawRect(survX, survY, 209, 21);
+            gr.DrawRect(surv1X, survY, btnW, 21);
             gr.SetColor(0x28060A);
-            gr.FillRect(survX + 1, survY + 1, 208, 20);
-            GMIDlet.a(1, "SURVIVAL ARENA (ENDLESS WAVES)", centerX, survY + 4, 17);
+            gr.FillRect(surv1X + 1, survY + 1, btnW - 1, 20);
+            GMIDlet.a(1, "★ SURVIVAL ★", surv1X + (btnW / 2), survY + 4, 17);
+        }
+
+        // Level 14: Titan Megazord
+        bool isZordSelected = _selectedLevel == 14;
+        if (isZordSelected)
+        {
+            gr.SetColor(0xFFD700);
+            gr.DrawRect(surv2X - 1, survY - 1, btnW + 2, 23);
+            gr.SetColor(0xFFFFFF);
+            gr.DrawRect(surv2X, survY, btnW, 21);
+            gr.SetColor(0x601418);
+            gr.FillRect(surv2X + 1, survY + 1, btnW - 1, 20);
+            GMIDlet.a(3, "⚡ MEGAZORD ⚡", surv2X + (btnW / 2), survY + 4, 17);
+        }
+        else
+        {
+            gr.SetColor(0x8B7500);
+            gr.DrawRect(surv2X, survY, btnW, 21);
+            gr.SetColor(0x28060A);
+            gr.FillRect(surv2X + 1, survY + 1, btnW - 1, 20);
+            GMIDlet.a(1, "⚡ MEGAZORD ⚡", surv2X + (btnW / 2), survY + 4, 17);
         }
 
         DrawDivider(gr, 140, screenW);
@@ -1370,7 +1404,7 @@ public sealed class MenuSystem
         gr.FillRect(boxX, boxY + boxH - 3, 3, 3);
         gr.FillRect(boxX + boxW - 3, boxY + boxH - 3, 3, 3);
 
-        int infoIdx = Math.Clamp(_selectedLevel - 1, 0, 12);
+        int infoIdx = Math.Clamp(_selectedLevel - 1, 0, StageDetails.Length - 1);
         var info = StageDetails[infoIdx];
 
         GMIDlet.a(3, info.Title, centerX, boxY + 7, 17);
@@ -1380,7 +1414,7 @@ public sealed class MenuSystem
         GMIDlet.a(1, info.Briefing1, centerX, boxY + 28, 17);
         GMIDlet.a(1, info.Briefing2, centerX, boxY + 44, 17);
 
-        bool isUnlocked = _selectedLevel <= maxLvl || _selectedLevel == 13;
+        bool isUnlocked = _selectedLevel <= maxLvl || _selectedLevel == 13 || _selectedLevel == 14;
         if (isUnlocked)
         {
             gr.SetColor(0x1B4D20);
@@ -1402,8 +1436,15 @@ public sealed class MenuSystem
             GMIDlet.a(0, "STAGE LOCKED BY EVIL FORCES", centerX, boxY + 86, 17);
         }
 
-        string[] rangerNames = { "RED RANGER (NICK)", "YELLOW RANGER (CHIP)", "BLUE RANGER (MADISON)", "PINK RANGER (VIDA)", "GREEN RANGER (XANDER)" };
-        GMIDlet.a(1, $"OPERATIVE: {rangerNames[_selectedCharacter]}", centerX, boxY + 102, 17);
+        if (_selectedLevel == 14)
+        {
+            GMIDlet.a(1, "OPERATIVE: TITAN MEGAZORD", centerX, boxY + 102, 17);
+        }
+        else
+        {
+            string[] rangerNames = { "RED RANGER (NICK)", "YELLOW RANGER (CHIP)", "BLUE RANGER (MADISON)", "PINK RANGER (VIDA)", "GREEN RANGER (XANDER)" };
+            GMIDlet.a(1, $"OPERATIVE: {rangerNames[_selectedCharacter]}", centerX, boxY + 102, 17);
+        }
 
         DrawDivider(gr, 274, screenW);
     }
@@ -1868,21 +1909,41 @@ public sealed class MenuSystem
                         }
                     }
 
-                    // Check Survival Arena button (Y = 114..134)
+                    // Check Survival Arena and Megazord buttons (Y = 114..134)
                     if (localY >= 114 && localY <= 134)
                     {
-                        if (leftClick)
+                        int surv1X = centerX - 105;
+                        int surv2X = surv1X + 107;
+                        if (localX >= surv1X && localX <= surv1X + 102)
                         {
-                            if (_selectedLevel == 13)
+                            if (leftClick)
                             {
-                                StartGame(0, _selectedCharacter, true);
+                                if (_selectedLevel == 13)
+                                {
+                                    StartGame(0, _selectedCharacter, true);
+                                }
+                                else
+                                {
+                                    _selectedLevel = 13;
+                                }
                             }
-                            else
-                            {
-                                _selectedLevel = 13;
-                            }
+                            return;
                         }
-                        return;
+                        else if (localX >= surv2X && localX <= surv2X + 102)
+                        {
+                            if (leftClick)
+                            {
+                                if (_selectedLevel == 14)
+                                {
+                                    StartGame(13, _selectedCharacter, false);
+                                }
+                                else
+                                {
+                                    _selectedLevel = 14;
+                                }
+                            }
+                            return;
+                        }
                     }
 
                     // Check Deploy button area in Dossier box (Y = 205..230)
